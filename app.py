@@ -20,7 +20,7 @@ from test_module5 import simulate_telemedicine_queue
 
 app = Flask(__name__)
 
-UPLOAD_FOLDER = 'data/uploads'
+UPLOAD_FOLDER = '/tmp/uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 def sanitize_for_json(obj):
