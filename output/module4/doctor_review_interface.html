@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SIH 2026 Tele-Ophthalmology Doctor Review Dashboard</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f7f9; margin: 0; padding: 20px; color: #2c3e50; }
+        .header { text-align: center; margin-bottom: 25px; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .header h1 { margin: 0 0 5px 0; color: #1a5276; }
+        .header p { margin: 0; color: #7f8c8d; font-size: 14px; }
+        .case-card { background: #fff; border-radius: 8px; padding: 20px; margin-bottom: 25px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); border-left: 6px solid #3498db; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ecf0f1; padding-bottom: 12px; margin-bottom: 15px; }
+        .card-header h3 { margin: 0; font-size: 18px; }
+        .badge { color: #fff; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 12px; letter-spacing: 0.5px; }
+        .image-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 15px; }
+        .img-box { text-align: center; background: #fafafa; padding: 8px; border-radius: 6px; border: 1px solid #e0e0e0; }
+        .img-box img { width: 100%; height: 180px; object-fit: contain; border-radius: 4px; }
+        .img-box p { margin: 6px 0 0 0; font-size: 12px; font-weight: 600; color: #555; }
+        .clinical-details { display: grid; grid-template-columns: 1fr 2fr; gap: 15px; background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 15px; }
+        .metric-group p { margin: 5px 0; font-size: 13px; }
+        .highlight { color: #2980b9; font-weight: bold; }
+        .rationale-box pre { margin: 0; font-family: inherit; font-size: 12px; white-space: pre-wrap; color: #34495e; }
+        .action-bar { display: flex; gap: 12px; align-items: center; }
+        .btn { padding: 10px 18px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.2s; }
+        .btn-approve { background-color: #27ae60; color: #fff; }
+        .btn-approve:hover { background-color: #219150; }
+        .btn-reject { background-color: #e67e22; color: #fff; }
+        .btn-escalate { background-color: #8e44ad; color: #fff; }
+        .status-tag { margin-left: auto; font-size: 13px; font-weight: bold; color: #7f8c8d; }
+    </style>
+    <script>
+        function reviewCase(id, action) {
+            const tag = document.getElementById('status-tag-' + id);
+            if (action === 'APPROVE') {
+                tag.innerText = "Status: APPROVED BY DOCTOR ✓";
+                tag.style.color = "#27ae60";
+            } else if (action === 'REJECT') {
+                tag.innerText = "Status: OVERRIDDEN / RE-GRADED ✗";
+                tag.style.color = "#e67e22";
+            } else if (action === 'ESCALATE') {
+                tag.innerText = "Status: ESCALATED TO SPECIALIST ⚑";
+                tag.style.color = "#8e44ad";
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="header">
+        <h1>SIH 2026 Explainable AI Diabetic Retinopathy Review UI</h1>
+        <p>Rural Tele-Ophthalmology Verification Portal — Target Doctor Review Time: < 30 Seconds per Patient</p>
+    </div>
+    
+        <div class="case-card" id="case-0">
+            <div class="card-header">
+                <h3>Patient Case #1: sample_01_clear.png</h3>
+                <span class="badge" style="background-color: #e74c3c;">REFERRAL REQUIRED</span>
+            </div>
+            <div class="image-grid">
+                <div class="img-box">
+                    <img src="mod4_orig_sample_01_clear.png" alt="Original">
+                    <p>1. Original Fundus</p>
+                </div>
+                <div class="img-box">
+                    <img src="mod4_enhanced_sample_01_clear.png" alt="Enhanced">
+                    <p>2. Quality Enhanced (CLAHE)</p>
+                </div>
+                <div class="img-box">
+                    <img src="mod4_overlay_sample_01_clear.png" alt="Lesions">
+                    <p>3. Lesion Overlay</p>
+                </div>
+                <div class="img-box">
+                    <img src="mod4_gradcam_sample_01_clear.png" alt="GradCAM">
+                    <p>4. Grad-CAM Explainability</p>
+                </div>
+            </div>
+            <div class="clinical-details">
+                <div class="metric-group">
+                    <p><strong>Assigned DR Grade:</strong> <span class="highlight">Proliferative DR (Level 4)</span></p>
+                    <p><strong>Calibrated Confidence:</strong> 72.5%</p>
+                    <p><strong>Grad-CAM Lesion Overlap:</strong> 0.53</p>
+                </div>
+                <div class="rationale-box">
+                    <pre>PATIENT CLINICAL DIAGNOSTIC REPORT
+----------------------------------------
+• Severity Grade: Proliferative DR (Level 4) (Confidence: 72.5%)
+• Referral Decision: REFERRAL REQUIRED (Level 2+ Boundary Exceeded)
+• Lesion Telemetry: MAs: 22, Exudates: 8 (3918 px), Hemorrhages: 12 (1291 px).
+• Active Neovascularization: PRESENT (Grade 4 Marker)
+• Grad-CAM Co-localization Correlation: 0.53 (High spatial overlap with detected lesions)</pre>
+                </div>
+            </div>
+            <div class="action-bar">
+                <button class="btn btn-approve" onclick="reviewCase(0, 'APPROVE')">✓ Approve Diagnosis (< 30s)</button>
+                <button class="btn btn-reject" onclick="reviewCase(0, 'REJECT')">✗ Override / Re-grade</button>
+                <button class="btn btn-escalate" onclick="reviewCase(0, 'ESCALATE')">⚑ Escalate to Specialist</button>
+                <span class="status-tag" id="status-tag-0">Status: Pending Review</span>
+            </div>
+        </div>
+        
+        <div class="case-card" id="case-1">
+            <div class="card-header">
+                <h3>Patient Case #2: sample_02_low_contrast.png</h3>
+                <span class="badge" style="background-color: #e74c3c;">REFERRAL REQUIRED</span>
+            </div>
+            <div class="image-grid">
+                <div class="img-box">
+                    <img src="mod4_orig_sample_02_low_contrast.png" alt="Original">
+                    <p>1. Original Fundus</p>
+                </div>
+                <div class="img-box">
+                    <img src="mod4_enhanced_sample_02_low_contrast.png" alt="Enhanced">
+                    <p>2. Quality Enhanced (CLAHE)</p>
+                </div>
+                <div class="img-box">
+                    <img src="mod4_overlay_sample_02_low_contrast.png" alt="Lesions">
+                    <p>3. Lesion Overlay</p>
+                </div>
+                <div class="img-box">
+                    <img src="mod4_gradcam_sample_02_low_contrast.png" alt="GradCAM">
+                    <p>4. Grad-CAM Explainability</p>
+                </div>
+            </div>
+            <div class="clinical-details">
+                <div class="metric-group">
+                    <p><strong>Assigned DR Grade:</strong> <span class="highlight">Proliferative DR (Level 4)</span></p>
+                    <p><strong>Calibrated Confidence:</strong> 72.5%</p>
+                    <p><strong>Grad-CAM Lesion Overlap:</strong> 0.53</p>
+                </div>
+                <div class="rationale-box">
+                    <pre>PATIENT CLINICAL DIAGNOSTIC REPORT
+----------------------------------------
+• Severity Grade: Proliferative DR (Level 4) (Confidence: 72.5%)
+• Referral Decision: REFERRAL REQUIRED (Level 2+ Boundary Exceeded)
+• Lesion Telemetry: MAs: 22, Exudates: 8 (3906 px), Hemorrhages: 12 (1288 px).
+• Active Neovascularization: PRESENT (Grade 4 Marker)
+• Grad-CAM Co-localization Correlation: 0.53 (High spatial overlap with detected lesions)</pre>
+                </div>
+            </div>
+            <div class="action-bar">
+                <button class="btn btn-approve" onclick="reviewCase(1, 'APPROVE')">✓ Approve Diagnosis (< 30s)</button>
+                <button class="btn btn-reject" onclick="reviewCase(1, 'REJECT')">✗ Override / Re-grade</button>
+                <button class="btn btn-escalate" onclick="reviewCase(1, 'ESCALATE')">⚑ Escalate to Specialist</button>
+                <span class="status-tag" id="status-tag-1">Status: Pending Review</span>
+            </div>
+        </div>
+        
+        <div class="case-card" id="case-2">
+            <div class="card-header">
+                <h3>Patient Case #3: sample_03_blurry.png</h3>
+                <span class="badge" style="background-color: #e74c3c;">REFERRAL REQUIRED</span>
+            </div>
+            <div class="image-grid">
+                <div class="img-box">
+                    <img src="mod4_orig_sample_03_blurry.png" alt="Original">
+                    <p>1. Original Fundus</p>
+                </div>
+                <div class="img-box">
+                    <img src="mod4_enhanced_sample_03_blurry.png" alt="Enhanced">
+                    <p>2. Quality Enhanced (CLAHE)</p>
+                </div>
+                <div class="img-box">
+                    <img src="mod4_overlay_sample_03_blurry.png" alt="Lesions">
+                    <p>3. Lesion Overlay</p>
+                </div>
+                <div class="img-box">
+                    <img src="mod4_gradcam_sample_03_blurry.png" alt="GradCAM">
+                    <p>4. Grad-CAM Explainability</p>
+                </div>
+            </div>
+            <div class="clinical-details">
+                <div class="metric-group">
+                    <p><strong>Assigned DR Grade:</strong> <span class="highlight">Proliferative DR (Level 4)</span></p>
+                    <p><strong>Calibrated Confidence:</strong> 72.5%</p>
+                    <p><strong>Grad-CAM Lesion Overlap:</strong> 0.33</p>
+                </div>
+                <div class="rationale-box">
+                    <pre>PATIENT CLINICAL DIAGNOSTIC REPORT
+----------------------------------------
+• Severity Grade: Proliferative DR (Level 4) (Confidence: 72.5%)
+• Referral Decision: REFERRAL REQUIRED (Level 2+ Boundary Exceeded)
+• Lesion Telemetry: MAs: 98, Exudates: 1 (3987 px), Hemorrhages: 11 (4808 px).
+• Active Neovascularization: PRESENT (Grade 4 Marker)
+• Grad-CAM Co-localization Correlation: 0.33 (High spatial overlap with detected lesions)</pre>
+                </div>
+            </div>
+            <div class="action-bar">
+                <button class="btn btn-approve" onclick="reviewCase(2, 'APPROVE')">✓ Approve Diagnosis (< 30s)</button>
+                <button class="btn btn-reject" onclick="reviewCase(2, 'REJECT')">✗ Override / Re-grade</button>
+                <button class="btn btn-escalate" onclick="reviewCase(2, 'ESCALATE')">⚑ Escalate to Specialist</button>
+                <span class="status-tag" id="status-tag-2">Status: Pending Review</span>
+            </div>
+        </div>
+        
+        <div class="case-card" id="case-3">
+            <div class="card-header">
+                <h3>Patient Case #4: sample_04_dark.png</h3>
+                <span class="badge" style="background-color: #e74c3c;">REFERRAL REQUIRED</span>
+            </div>
+            <div class="image-grid">
+                <div class="img-box">
+                    <img src="mod4_orig_sample_04_dark.png" alt="Original">
+                    <p>1. Original Fundus</p>
+                </div>
+                <div class="img-box">
+                    <img src="mod4_enhanced_sample_04_dark.png" alt="Enhanced">
+                    <p>2. Quality Enhanced (CLAHE)</p>
+                </div>
+                <div class="img-box">
+                    <img src="mod4_overlay_sample_04_dark.png" alt="Lesions">
+                    <p>3. Lesion Overlay</p>
+                </div>
+                <div class="img-box">
+                    <img src="mod4_gradcam_sample_04_dark.png" alt="GradCAM">
+                    <p>4. Grad-CAM Explainability</p>
+                </div>
+            </div>
+            <div class="clinical-details">
+                <div class="metric-group">
+                    <p><strong>Assigned DR Grade:</strong> <span class="highlight">Proliferative DR (Level 4)</span></p>
+                    <p><strong>Calibrated Confidence:</strong> 72.5%</p>
+                    <p><strong>Grad-CAM Lesion Overlap:</strong> 0.39</p>
+                </div>
+                <div class="rationale-box">
+                    <pre>PATIENT CLINICAL DIAGNOSTIC REPORT
+----------------------------------------
+• Severity Grade: Proliferative DR (Level 4) (Confidence: 72.5%)
+• Referral Decision: REFERRAL REQUIRED (Level 2+ Boundary Exceeded)
+• Lesion Telemetry: MAs: 5, Exudates: 6 (1597 px), Hemorrhages: 0 (0 px).
+• Active Neovascularization: PRESENT (Grade 4 Marker)
+• Grad-CAM Co-localization Correlation: 0.39 (High spatial overlap with detected lesions)</pre>
+                </div>
+            </div>
+            <div class="action-bar">
+                <button class="btn btn-approve" onclick="reviewCase(3, 'APPROVE')">✓ Approve Diagnosis (< 30s)</button>
+                <button class="btn btn-reject" onclick="reviewCase(3, 'REJECT')">✗ Override / Re-grade</button>
+                <button class="btn btn-escalate" onclick="reviewCase(3, 'ESCALATE')">⚑ Escalate to Specialist</button>
+                <span class="status-tag" id="status-tag-3">Status: Pending Review</span>
+            </div>
+        </div>
+        
+        <div class="case-card" id="case-4">
+            <div class="card-header">
+                <h3>Patient Case #5: sample_05_cropped.png</h3>
+                <span class="badge" style="background-color: #e74c3c;">REFERRAL REQUIRED</span>
+            </div>
+            <div class="image-grid">
+                <div class="img-box">
+                    <img src="mod4_orig_sample_05_cropped.png" alt="Original">
+                    <p>1. Original Fundus</p>
+                </div>
+                <div class="img-box">
+                    <img src="mod4_enhanced_sample_05_cropped.png" alt="Enhanced">
+                    <p>2. Quality Enhanced (CLAHE)</p>
+                </div>
+                <div class="img-box">
+                    <img src="mod4_overlay_sample_05_cropped.png" alt="Lesions">
+                    <p>3. Lesion Overlay</p>
+                </div>
+                <div class="img-box">
+                    <img src="mod4_gradcam_sample_05_cropped.png" alt="GradCAM">
+                    <p>4. Grad-CAM Explainability</p>
+                </div>
+            </div>
+            <div class="clinical-details">
+                <div class="metric-group">
+                    <p><strong>Assigned DR Grade:</strong> <span class="highlight">Proliferative DR (Level 4)</span></p>
+                    <p><strong>Calibrated Confidence:</strong> 72.5%</p>
+                    <p><strong>Grad-CAM Lesion Overlap:</strong> 0.60</p>
+                </div>
+                <div class="rationale-box">
+                    <pre>PATIENT CLINICAL DIAGNOSTIC REPORT
+----------------------------------------
+• Severity Grade: Proliferative DR (Level 4) (Confidence: 72.5%)
+• Referral Decision: REFERRAL REQUIRED (Level 2+ Boundary Exceeded)
+• Lesion Telemetry: MAs: 15, Exudates: 5 (3391 px), Hemorrhages: 0 (0 px).
+• Active Neovascularization: PRESENT (Grade 4 Marker)
+• Grad-CAM Co-localization Correlation: 0.60 (High spatial overlap with detected lesions)</pre>
+                </div>
+            </div>
+            <div class="action-bar">
+                <button class="btn btn-approve" onclick="reviewCase(4, 'APPROVE')">✓ Approve Diagnosis (< 30s)</button>
+                <button class="btn btn-reject" onclick="reviewCase(4, 'REJECT')">✗ Override / Re-grade</button>
+                <button class="btn btn-escalate" onclick="reviewCase(4, 'ESCALATE')">⚑ Escalate to Specialist</button>
+                <span class="status-tag" id="status-tag-4">Status: Pending Review</span>
+            </div>
+        </div>
+        
+        <div class="case-card" id="case-5">
+            <div class="card-header">
+                <h3>Patient Case #6: sample_06_moderate_dr.png</h3>
+                <span class="badge" style="background-color: #e74c3c;">REFERRAL REQUIRED</span>
+            </div>
+            <div class="image-grid">
+                <div class="img-box">
+                    <img src="mod4_orig_sample_06_moderate_dr.png" alt="Original">
+                    <p>1. Original Fundus</p>
+                </div>
+                <div class="img-box">
+                    <img src="mod4_enhanced_sample_06_moderate_dr.png" alt="Enhanced">
+                    <p>2. Quality Enhanced (CLAHE)</p>
+                </div>
+                <div class="img-box">
+                    <img src="mod4_overlay_sample_06_moderate_dr.png" alt="Lesions">
+                    <p>3. Lesion Overlay</p>
+                </div>
+                <div class="img-box">
+                    <img src="mod4_gradcam_sample_06_moderate_dr.png" alt="GradCAM">
+                    <p>4. Grad-CAM Explainability</p>
+                </div>
+            </div>
+            <div class="clinical-details">
+                <div class="metric-group">
+                    <p><strong>Assigned DR Grade:</strong> <span class="highlight">Proliferative DR (Level 4)</span></p>
+                    <p><strong>Calibrated Confidence:</strong> 72.5%</p>
+                    <p><strong>Grad-CAM Lesion Overlap:</strong> 0.51</p>
+                </div>
+                <div class="rationale-box">
+                    <pre>PATIENT CLINICAL DIAGNOSTIC REPORT
+----------------------------------------
+• Severity Grade: Proliferative DR (Level 4) (Confidence: 72.5%)
+• Referral Decision: REFERRAL REQUIRED (Level 2+ Boundary Exceeded)
+• Lesion Telemetry: MAs: 25, Exudates: 11 (4234 px), Hemorrhages: 12 (1307 px).
+• Active Neovascularization: PRESENT (Grade 4 Marker)
+• Grad-CAM Co-localization Correlation: 0.51 (High spatial overlap with detected lesions)</pre>
+                </div>
+            </div>
+            <div class="action-bar">
+                <button class="btn btn-approve" onclick="reviewCase(5, 'APPROVE')">✓ Approve Diagnosis (< 30s)</button>
+                <button class="btn btn-reject" onclick="reviewCase(5, 'REJECT')">✗ Override / Re-grade</button>
+                <button class="btn btn-escalate" onclick="reviewCase(5, 'ESCALATE')">⚑ Escalate to Specialist</button>
+                <span class="status-tag" id="status-tag-5">Status: Pending Review</span>
+            </div>
+        </div>
+        
+        <div class="case-card" id="case-6">
+            <div class="card-header">
+                <h3>Patient Case #7: sample_07_severe_dr.png</h3>
+                <span class="badge" style="background-color: #e74c3c;">REFERRAL REQUIRED</span>
+            </div>
+            <div class="image-grid">
+                <div class="img-box">
+                    <img src="mod4_orig_sample_07_severe_dr.png" alt="Original">
+                    <p>1. Original Fundus</p>
+                </div>
+                <div class="img-box">
+                    <img src="mod4_enhanced_sample_07_severe_dr.png" alt="Enhanced">
+                    <p>2. Quality Enhanced (CLAHE)</p>
+                </div>
+                <div class="img-box">
+                    <img src="mod4_overlay_sample_07_severe_dr.png" alt="Lesions">
+                    <p>3. Lesion Overlay</p>
+                </div>
+                <div class="img-box">
+                    <img src="mod4_gradcam_sample_07_severe_dr.png" alt="GradCAM">
+                    <p>4. Grad-CAM Explainability</p>
+                </div>
+            </div>
+            <div class="clinical-details">
+                <div class="metric-group">
+                    <p><strong>Assigned DR Grade:</strong> <span class="highlight">Proliferative DR (Level 4)</span></p>
+                    <p><strong>Calibrated Confidence:</strong> 72.5%</p>
+                    <p><strong>Grad-CAM Lesion Overlap:</strong> 0.50</p>
+                </div>
+                <div class="rationale-box">
+                    <pre>PATIENT CLINICAL DIAGNOSTIC REPORT
+----------------------------------------
+• Severity Grade: Proliferative DR (Level 4) (Confidence: 72.5%)
+• Referral Decision: REFERRAL REQUIRED (Level 2+ Boundary Exceeded)
+• Lesion Telemetry: MAs: 17, Exudates: 11 (4491 px), Hemorrhages: 13 (1340 px).
+• Active Neovascularization: PRESENT (Grade 4 Marker)
+• Grad-CAM Co-localization Correlation: 0.50 (High spatial overlap with detected lesions)</pre>
+                </div>
+            </div>
+            <div class="action-bar">
+                <button class="btn btn-approve" onclick="reviewCase(6, 'APPROVE')">✓ Approve Diagnosis (< 30s)</button>
+                <button class="btn btn-reject" onclick="reviewCase(6, 'REJECT')">✗ Override / Re-grade</button>
+                <button class="btn btn-escalate" onclick="reviewCase(6, 'ESCALATE')">⚑ Escalate to Specialist</button>
+                <span class="status-tag" id="status-tag-6">Status: Pending Review</span>
+            </div>
+        </div>
+        
+        <div class="case-card" id="case-7">
+            <div class="card-header">
+                <h3>Patient Case #8: sample_08_proliferative_dr.png</h3>
+                <span class="badge" style="background-color: #e74c3c;">REFERRAL REQUIRED</span>
+            </div>
+            <div class="image-grid">
+                <div class="img-box">
+                    <img src="mod4_orig_sample_08_proliferative_dr.png" alt="Original">
+                    <p>1. Original Fundus</p>
+                </div>
+                <div class="img-box">
+                    <img src="mod4_enhanced_sample_08_proliferative_dr.png" alt="Enhanced">
+                    <p>2. Quality Enhanced (CLAHE)</p>
+                </div>
+                <div class="img-box">
+                    <img src="mod4_overlay_sample_08_proliferative_dr.png" alt="Lesions">
+                    <p>3. Lesion Overlay</p>
+                </div>
+                <div class="img-box">
+                    <img src="mod4_gradcam_sample_08_proliferative_dr.png" alt="GradCAM">
+                    <p>4. Grad-CAM Explainability</p>
+                </div>
+            </div>
+            <div class="clinical-details">
+                <div class="metric-group">
+                    <p><strong>Assigned DR Grade:</strong> <span class="highlight">Proliferative DR (Level 4)</span></p>
+                    <p><strong>Calibrated Confidence:</strong> 72.5%</p>
+                    <p><strong>Grad-CAM Lesion Overlap:</strong> 0.52</p>
+                </div>
+                <div class="rationale-box">
+                    <pre>PATIENT CLINICAL DIAGNOSTIC REPORT
+----------------------------------------
+• Severity Grade: Proliferative DR (Level 4) (Confidence: 72.5%)
+• Referral Decision: REFERRAL REQUIRED (Level 2+ Boundary Exceeded)
+• Lesion Telemetry: MAs: 28, Exudates: 11 (3861 px), Hemorrhages: 12 (1220 px).
+• Active Neovascularization: PRESENT (Grade 4 Marker)
+• Grad-CAM Co-localization Correlation: 0.52 (High spatial overlap with detected lesions)</pre>
+                </div>
+            </div>
+            <div class="action-bar">
+                <button class="btn btn-approve" onclick="reviewCase(7, 'APPROVE')">✓ Approve Diagnosis (< 30s)</button>
+                <button class="btn btn-reject" onclick="reviewCase(7, 'REJECT')">✗ Override / Re-grade</button>
+                <button class="btn btn-escalate" onclick="reviewCase(7, 'ESCALATE')">⚑ Escalate to Specialist</button>
+                <span class="status-tag" id="status-tag-7">Status: Pending Review</span>
+            </div>
+        </div>
+        
+</body>
+</html>
