@@ -55,6 +55,40 @@ def assess_and_enhance(img_path, params=None):
     else:
         fov_completeness = 0.0
 
+    import hashlib
+
+    # 0. Digital Provenance & Cryptographic Fingerprinting (SHA-256)
+    with open(img_path, 'rb') as f:
+        file_bytes = f.read()
+    image_sha256 = hashlib.sha256(file_bytes).hexdigest()
+
+    # 1. Real Fundus Photo Authenticity & Synthetic/Text Overlay Classifier
+    # Check 1: Retinal Color Gamut (Fundus is predominantly reddish-orange inside aperture: R >= G >= B)
+    in_aperture = fov_mask > 0
+    if np.sum(in_aperture) > 500:
+        r_fov = r_chan[in_aperture].astype(float)
+        g_fov = g_chan[in_aperture].astype(float)
+        b_fov = b_chan[in_aperture].astype(float)
+        
+        red_dominance = np.mean(r_fov > (g_fov * 0.95))
+        blue_suppression = np.mean(g_fov > (b_fov * 0.90))
+        is_retinal_gamut = bool(red_dominance > 0.65 and blue_suppression > 0.60)
+    else:
+        is_retinal_gamut = False
+
+    # Check 2: Artificial Overlaid Text / Arrows / Watermark Detector
+    # High-contrast artificial strokes: purely saturated white or uniform text boxes
+    white_text_mask = (r_chan > 245) & (g_chan > 245) & (b_chan > 245)
+    text_edge_density = float(np.sum(white_text_mask) / (h * w + 1e-5))
+    has_heavy_text_overlay = bool(text_edge_density > 0.12) # >12% pure white text/borders
+
+    # Check 3: Laterality Detection (OD: Right Eye, OS: Left Eye based on nasal Optic Disc position)
+    rg_composite = cv2.GaussianBlur(r_chan.astype(float)*0.6 + g_chan.astype(float)*0.4, (31, 31), 0)
+    rg_composite[fov_mask == 0] = 0
+    _, _, _, max_loc = cv2.minMaxLoc(rg_composite)
+    od_x, od_y = max_loc
+    laterality = "OS (Left Eye)" if od_x < (w // 2) else "OD (Right Eye)"
+
     # 2. Focus / Sharpness Metric (Laplacian Variance)
     lap = cv2.Laplacian(g_chan, cv2.CV_64F)
     focus_score = float(np.var(lap[fov_mask > 0])) if fov_area > 0 else float(np.var(lap))
@@ -85,7 +119,29 @@ def assess_and_enhance(img_path, params=None):
         contrast_score = float(np.std(g_chan))
         mean_brightness = float(np.mean(g_chan))
 
+    # 5. Enhancement Sub-pipeline & Statistical Divergence Verification
+    lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
+    l_chan, a_chan, b_chan = cv2.split(lab)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    l_clahe = clahe.apply(l_chan)
+    enhanced_lab = cv2.merge([l_clahe, a_chan, b_chan])
+    enhanced_img = cv2.cvtColor(enhanced_lab, cv2.COLOR_LAB2BGR)
+    enhanced_img[fov_mask == 0] = 0
+
+    # Calculate CLAHE Chi-Square Histogram Divergence (verifies distinct processing stage)
+    hist_raw = cv2.calcHist([l_chan], [0], fov_mask, [64], [0, 256])
+    hist_enh = cv2.calcHist([l_clahe], [0], fov_mask, [64], [0, 256])
+    cv2.normalize(hist_raw, hist_raw)
+    cv2.normalize(hist_enh, hist_enh)
+    clahe_chi_sq = float(cv2.compareHist(hist_raw, hist_enh, cv2.HISTCMP_CHISQR))
+    is_distinct_enhancement = bool(clahe_chi_sq > 0.04)
+
     quality_report = {
+        'image_sha256': image_sha256,
+        'laterality': laterality,
+        'is_retinal_gamut': is_retinal_gamut,
+        'clahe_chi_sq': clahe_chi_sq,
+        'is_distinct_enhancement': is_distinct_enhancement,
         'focus_score': focus_score,
         'fft_focus_score': fft_focus_score,
         'fov_ratio': fov_ratio,
@@ -95,9 +151,15 @@ def assess_and_enhance(img_path, params=None):
         'illumination_std': illumination_std
     }
 
-    # 5. Decision Gatekeeping
+    # 6. Decision Gatekeeping (Multi-Stage Integrity & Quality Filter)
     rejection_reason = ""
-    if fov_ratio < params['fov_min_reject'] and fov_completeness < 0.50:
+    if not is_retinal_gamut:
+        status = 'reject'
+        rejection_reason = "Non-Retinal Image / Invalid Color Gamut Detected — Only authentic fundus photographs are accepted."
+    elif has_heavy_text_overlay:
+        status = 'reject'
+        rejection_reason = "Synthetic Overlays / Screenshot Annotations Detected — Please upload clean unannotated raw fundus scans."
+    elif fov_ratio < params['fov_min_reject'] and fov_completeness < 0.50:
         status = 'reject'
         rejection_reason = f"Incomplete Field of View (Coverage: {fov_ratio*100:.1f}%, Min: {params['fov_min_reject']*100:.1f}%) — Re-align fundus camera centered on pupil."
     elif focus_score < params['focus_min_reject']:
@@ -111,22 +173,8 @@ def assess_and_enhance(img_path, params=None):
     else:
         status = 'pass'
 
-    # 6. Enhancement Sub-pipeline
     if status == 'reject':
         enhanced_img = img.copy()
-    else:
-        # High-fidelity CLAHE enhancement in CIELAB color space (preserves natural chrominance)
-        lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
-        l_chan, a_chan, b_chan = cv2.split(lab)
-        
-        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-        l_clahe = clahe.apply(l_chan)
-        
-        enhanced_lab = cv2.merge([l_clahe, a_chan, b_chan])
-        enhanced_img = cv2.cvtColor(enhanced_lab, cv2.COLOR_LAB2BGR)
-
-        # Apply FOV mask
-        enhanced_img[fov_mask == 0] = 0
 
     return status, enhanced_img, quality_report, rejection_reason
 

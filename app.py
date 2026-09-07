@@ -1764,11 +1764,16 @@ HTML_TEMPLATE = """
 def index():
     return render_template_string(HTML_TEMPLATE)
 
+# Global Study Audit Registry for Image Hash Tracking & Duplicate Prevention
+STUDY_REGISTRY = {}
+
 @app.route('/api/screen', methods=['POST'])
 def api_screen():
     try:
         file = request.files.get('file')
         sample_name = request.form.get('sample_name')
+        patient_id = request.form.get('patient_id', 'PT-2026-9042')
+        device_id = request.form.get('device_id', 'OptiNova-EdgeCam-v2')
 
         img_path = None
         if file:
@@ -1785,26 +1790,47 @@ def api_screen():
         if img_orig is None:
             return jsonify({'error': f'Invalid image format: could not decode {img_path}'}), 400
 
-        # 1. Module 1: Quality Gatekeeper & Enhancement
+        # 1. Module 1: Quality Gatekeeper, Authenticity Filter & Enhancement
         status, enhanced, q_report, reason = assess_and_enhance(img_path)
+
+        # Audit Registry: Check for cross-study duplicate reuse
+        img_sha = q_report.get('image_sha256', '')
+        is_duplicate = False
+        duplicate_note = ""
+        import datetime
+        timestamp_now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
+        if img_sha in STUDY_REGISTRY:
+            is_duplicate = True
+            first_entry = STUDY_REGISTRY[img_sha]
+            duplicate_note = f"Warning: Identical image fingerprint previously screened under Patient {first_entry.get('patient_id')} at {first_entry.get('timestamp')}."
+        else:
+            STUDY_REGISTRY[img_sha] = {
+                'patient_id': patient_id,
+                'device_id': device_id,
+                'timestamp': timestamp_now
+            }
 
         # 2. Module 2: Structure & Lesion Segmentation
         overlay, stats, masks = segment_retinal_structures(enhanced)
 
-        # 3. Module 3: DR Severity Grading
+        # 3. Module 3: Continuous DR Severity Grading
         level, ref, conf, probs, ref_prob = grade_dr(stats, quality=q_report)
 
-        # 4. Module 4: Explainability & Grad-CAM
+        # 4. Module 4: Explainability, Spatial IoU & Reliability Gating
         heatmap, corr_score, report = explain_prediction(enhanced, level, ref, conf, stats, masks)
 
         if status == 'reject':
             grade_name = "Ungradeable / Quality Rejected"
             ref = False
             conf = 0.0
-            rationale = f"[QUALITY GATEKEEPER REJECTED]\nReason: {reason}\nAction: Scan failed edge quality threshold. Please adjust fundus camera focus/flash and recapture."
+            rationale = f"[QUALITY GATEKEEPER REJECTED]\nReason: {reason}\nAction: Scan failed edge quality/authenticity threshold. Please adjust fundus camera focus/flash and recapture."
         else:
             grade_name = report['severity_name']
+            conf = report['confidence']
+            ref = report['referable_flag']
             rationale = report['rationale_text']
+            if is_duplicate:
+                rationale += f"\n\n⚠️ [AUDIT FLAG]: {duplicate_note}"
 
         # Sanitize all data structures for clean JSON serialization
         response_data = sanitize_for_json({
@@ -1816,6 +1842,14 @@ def api_screen():
             'quality': q_report,
             'stats': stats,
             'correlation_score': corr_score if status != 'reject' else 0.0,
+            'spatial_iou': report.get('spatial_iou', 0.0) if status != 'reject' else 0.0,
+            'pearson_corr': report.get('pearson_corr', 0.0) if status != 'reject' else 0.0,
+            'is_xai_gated': report.get('is_xai_gated', False) if status != 'reject' else False,
+            'laterality': q_report.get('laterality', 'OD (Right Eye)'),
+            'image_sha256': img_sha,
+            'is_duplicate': is_duplicate,
+            'duplicate_note': duplicate_note,
+            'timestamp': timestamp_now,
             'rationale': rationale,
             'img_orig': image_to_base64(img_orig),
             'img_enhanced': image_to_base64(enhanced),
