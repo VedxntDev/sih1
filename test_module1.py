@@ -102,23 +102,15 @@ def assess_and_enhance(img_path, params=None):
     if status == 'reject':
         enhanced_img = img.copy()
     else:
-        # CLAHE on green channel
-        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-        g_clahe = clahe.apply(g_chan)
-
-        # Background Illumination Normalization
-        bg_blur = cv2.GaussianBlur(g_clahe.astype(float), (61, 61), 15)
-        target_mean = np.mean(g_chan[fov_mask > 0]) if fov_area > 0 else np.mean(g_chan)
-        g_norm = np.clip((g_clahe.astype(float) / (bg_blur + 1e-5)) * target_mean, 0, 255).astype(np.uint8)
-
-        # Denoising
-        g_denoised = cv2.medianBlur(g_norm, 3)
-
-        # Color synthesis in HSV space
-        hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-        hsv[:, :, 1] = np.clip(hsv[:, :, 1].astype(float) * 1.15, 0, 255).astype(np.uint8) # Saturation boost
-        hsv[:, :, 2] = g_denoised # Replace Value with enhanced green channel
-        enhanced_img = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+        # High-fidelity CLAHE enhancement in CIELAB color space (preserves natural chrominance)
+        lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
+        l_chan, a_chan, b_chan = cv2.split(lab)
+        
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        l_clahe = clahe.apply(l_chan)
+        
+        enhanced_lab = cv2.merge([l_clahe, a_chan, b_chan])
+        enhanced_img = cv2.cvtColor(enhanced_lab, cv2.COLOR_LAB2BGR)
 
         # Apply FOV mask
         enhanced_img[fov_mask == 0] = 0

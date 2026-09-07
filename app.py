@@ -1798,20 +1798,24 @@ def api_screen():
         heatmap, corr_score, report = explain_prediction(enhanced, level, ref, conf, stats, masks)
 
         if status == 'reject':
-            rationale = f"[QUALITY GATEKEEPER REJECTED]\\nReason: {reason}\\nAction: Laplacian focus Var(∇²I) < τ. Please adjust illumination/focus and recapture."
+            grade_name = "Ungradeable / Quality Rejected"
+            ref = False
+            conf = 0.0
+            rationale = f"[QUALITY GATEKEEPER REJECTED]\nReason: {reason}\nAction: Scan failed edge quality threshold. Please adjust fundus camera focus/flash and recapture."
         else:
+            grade_name = report['severity_name']
             rationale = report['rationale_text']
 
         # Sanitize all data structures for clean JSON serialization
         response_data = sanitize_for_json({
             'status': status,
-            'grade_level': level,
-            'grade_name': report['severity_name'],
+            'grade_level': level if status != 'reject' else -1,
+            'grade_name': grade_name,
             'referable': ref,
             'confidence': conf,
             'quality': q_report,
             'stats': stats,
-            'correlation_score': corr_score,
+            'correlation_score': corr_score if status != 'reject' else 0.0,
             'rationale': rationale,
             'img_orig': image_to_base64(img_orig),
             'img_enhanced': image_to_base64(enhanced),
