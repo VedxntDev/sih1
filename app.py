@@ -1792,7 +1792,7 @@ def api_screen():
         overlay, stats, masks = segment_retinal_structures(enhanced)
 
         # 3. Module 3: DR Severity Grading
-        level, ref, conf, probs, ref_prob = grade_dr(stats)
+        level, ref, conf, probs, ref_prob = grade_dr(stats, quality=q_report)
 
         # 4. Module 4: Explainability & Grad-CAM
         heatmap, corr_score, report = explain_prediction(enhanced, level, ref, conf, stats, masks)
