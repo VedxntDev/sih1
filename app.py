@@ -2,7 +2,7 @@
 """
 OptiNova AI — Explainable Retinal Intelligence & Diabetic Retinopathy Screening (SIH 2026)
 Smart India Hackathon 2026 | Problem Statement ID: SIH26038 | Theme: MedTech / Clean & Green Software
-Team: Optinova | Precision Architecture & Zero-CAPEX Edge Telemetry
+Team: Optinova | Zero-CAPEX Edge Tele-Ophthalmology & Clinical EHR Report Export
 """
 
 import os
@@ -20,12 +20,12 @@ from test_module5 import simulate_telemedicine_queue
 
 app = Flask(__name__)
 
-UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
+# Serverless-friendly upload folder in /tmp
+UPLOAD_FOLDER = '/tmp/uploads'
 try:
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 except Exception:
-    UPLOAD_FOLDER = '/tmp/uploads'
-    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+    pass
 
 def sanitize_for_json(obj):
     """Recursively converts NumPy datatypes to native Python types."""
@@ -65,18 +65,16 @@ HTML_TEMPLATE = """
             --font-main: 'Inter', -apple-system, sans-serif;
             --font-mono: 'JetBrains Mono', monospace;
 
-            /* Dark Theme (Default) - Crisp Architectural Palette */
+            /* Dark Theme (Default) */
             --bg-body: #08090c;
             --bg-surface: #0f1117;
             --bg-surface-elevated: #161922;
             --bg-card: rgba(15, 17, 23, 0.95);
-            --bg-card-hover: #161922;
             --bg-badge: rgba(255, 255, 255, 0.04);
             
             --border-color: #232734;
             --border-subtle: #1c202b;
             --border-active: #f59e0b;
-            --border-sharp: 1px solid var(--border-color);
 
             --text-primary: #f3f4f6;
             --text-secondary: #9ca3af;
@@ -84,17 +82,9 @@ HTML_TEMPLATE = """
 
             --accent-gold: #d97706;
             --accent-gold-bright: #f59e0b;
-            --accent-gold-dim: rgba(245, 158, 11, 0.12);
             --accent-emerald: #10b981;
             --accent-rose: #f43f5e;
             --accent-cyan: #06b6d4;
-
-            --radius-none: 0px;
-            --radius-sm: 2px;
-            --radius-md: 4px;
-
-            --shadow-elevation: 0 4px 20px rgba(0, 0, 0, 0.5);
-            --shadow-sharp: 0 1px 3px rgba(0, 0, 0, 0.8), 0 0 0 1px var(--border-color);
         }
 
         [data-theme="light"] {
@@ -102,13 +92,11 @@ HTML_TEMPLATE = """
             --bg-surface: #ffffff;
             --bg-surface-elevated: #f1f5f9;
             --bg-card: #ffffff;
-            --bg-card-hover: #f8fafc;
             --bg-badge: rgba(15, 23, 42, 0.04);
 
             --border-color: #e2e8f0;
             --border-subtle: #cbd5e1;
             --border-active: #d97706;
-            --border-sharp: 1px solid var(--border-color);
 
             --text-primary: #0f172a;
             --text-secondary: #475569;
@@ -116,20 +104,16 @@ HTML_TEMPLATE = """
 
             --accent-gold: #d97706;
             --accent-gold-bright: #b45309;
-            --accent-gold-dim: rgba(217, 119, 6, 0.08);
             --accent-emerald: #059669;
             --accent-rose: #e11d48;
             --accent-cyan: #0891b2;
-
-            --shadow-elevation: 0 4px 20px rgba(15, 23, 42, 0.06);
-            --shadow-sharp: 0 1px 3px rgba(15, 23, 42, 0.08), 0 0 0 1px var(--border-color);
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            border-radius: var(--radius-none) !important;
+            border-radius: 0px !important;
             transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
         }
 
@@ -143,7 +127,6 @@ HTML_TEMPLATE = """
             overflow-x: hidden;
         }
 
-        /* Subtle technical grid background */
         .technical-grid {
             position: absolute;
             top: 0;
@@ -160,7 +143,7 @@ HTML_TEMPLATE = """
             z-index: 0;
         }
 
-        /* Navigation Header */
+        /* Navigation */
         nav {
             position: sticky;
             top: 0;
@@ -243,7 +226,6 @@ HTML_TEMPLATE = """
             gap: 10px;
         }
 
-        /* Sharp Buttons */
         .btn-sharp {
             font-family: var(--font-display);
             font-size: 13px;
@@ -289,7 +271,6 @@ HTML_TEMPLATE = """
             border-color: var(--accent-gold-bright);
         }
 
-        /* Container */
         .container {
             max-width: 1280px;
             margin: 0 auto;
@@ -298,7 +279,7 @@ HTML_TEMPLATE = """
             z-index: 1;
         }
 
-        /* Hero Section */
+        /* Hero */
         .hero {
             padding: 80px 0 50px 0;
             border-bottom: 1px solid var(--border-color);
@@ -353,7 +334,6 @@ HTML_TEMPLATE = """
             flex-wrap: wrap;
         }
 
-        /* Telemetry Metrics Bar */
         .metrics-grid-flat {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -397,7 +377,6 @@ HTML_TEMPLATE = """
             margin-top: 6px;
         }
 
-        /* Section Layouts */
         .section-box {
             padding: 70px 0;
             border-bottom: 1px solid var(--border-color);
@@ -434,7 +413,7 @@ HTML_TEMPLATE = """
             margin-top: 8px;
         }
 
-        /* 4-Step Architecture Cards */
+        /* 4-Step Architecture */
         .arch-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -457,10 +436,6 @@ HTML_TEMPLATE = """
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-        }
-
-        .arch-card:hover {
-            background: var(--bg-surface-elevated);
         }
 
         .arch-card-num {
@@ -487,7 +462,7 @@ HTML_TEMPLATE = """
             line-height: 1.6;
         }
 
-        /* Interactive Screening Studio */
+        /* Screening Studio */
         .studio-grid-flat {
             display: grid;
             grid-template-columns: 360px 1fr;
@@ -524,7 +499,6 @@ HTML_TEMPLATE = """
             padding-bottom: 10px;
         }
 
-        /* Drop Zone */
         .drop-zone-flat {
             border: 1px dashed var(--border-color);
             padding: 30px 16px;
@@ -572,7 +546,6 @@ HTML_TEMPLATE = """
             text-transform: uppercase;
         }
 
-        /* Quad Visual Display */
         .quad-grid-flat {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -620,7 +593,6 @@ HTML_TEMPLATE = """
             margin-top: 6px;
         }
 
-        /* Split Slider Flat */
         .split-box-flat {
             position: relative;
             width: 100%;
@@ -670,7 +642,6 @@ HTML_TEMPLATE = """
             z-index: 10;
         }
 
-        /* Telemetry Table Flat */
         .telemetry-grid-flat {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -702,7 +673,6 @@ HTML_TEMPLATE = """
             margin-top: 4px;
         }
 
-        /* Technical Data Table */
         .table-flat {
             width: 100%;
             border-collapse: collapse;
@@ -729,11 +699,6 @@ HTML_TEMPLATE = """
             background: var(--bg-surface);
         }
 
-        .table-flat tr:hover td {
-            background: var(--bg-surface-elevated);
-        }
-
-        /* Modal Overlay Flat */
         .modal-flat-backdrop {
             position: fixed;
             top: 0;
@@ -759,7 +724,79 @@ HTML_TEMPLATE = """
             position: relative;
         }
 
-        /* Toast Flat */
+        /* Doctor Clinical Report Modal & Sheet */
+        .doctor-report-sheet {
+            background: #ffffff;
+            color: #000000;
+            padding: 32px;
+            border: 1px solid #d1d5db;
+            font-family: var(--font-main);
+            max-width: 860px;
+            margin: 0 auto;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .doctor-report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid #000000;
+            padding-bottom: 16px;
+            margin-bottom: 20px;
+        }
+
+        .report-grid-quad {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin: 16px 0;
+        }
+
+        .report-quad-item {
+            border: 1px solid #e5e7eb;
+            padding: 4px;
+            text-align: center;
+        }
+
+        .report-quad-item img {
+            width: 100%;
+            height: 120px;
+            object-fit: contain;
+            background: #000000;
+        }
+
+        .report-quad-item span {
+            font-family: var(--font-mono);
+            font-size: 9px;
+            font-weight: 700;
+            color: #4b5563;
+            text-transform: uppercase;
+            display: block;
+            margin-top: 4px;
+        }
+
+        .report-table-mini {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            margin: 14px 0;
+        }
+
+        .report-table-mini th {
+            background: #f3f4f6;
+            color: #111827;
+            padding: 6px 10px;
+            border: 1px solid #d1d5db;
+            text-align: left;
+            font-family: var(--font-mono);
+            font-size: 10px;
+        }
+
+        .report-table-mini td {
+            padding: 6px 10px;
+            border: 1px solid #d1d5db;
+        }
+
         #toast {
             position: fixed;
             bottom: 24px;
@@ -775,7 +812,6 @@ HTML_TEMPLATE = """
             display: none;
         }
 
-        /* Footer Flat */
         footer {
             border-top: 1px solid var(--border-color);
             padding: 40px 0;
@@ -791,6 +827,42 @@ HTML_TEMPLATE = """
             flex-wrap: wrap;
             gap: 16px;
         }
+
+        /* Precision Print Styles: Strip all UI noise and print only the clinical report */
+        @media print {
+            body {
+                background: #ffffff !important;
+                color: #000000 !important;
+            }
+            .technical-grid, nav, .hero, #pipeline, #screening, #matrix, #simulator, footer, #toast, .modal-flat-backdrop:not(#doctorReportModal), .no-print {
+                display: none !important;
+            }
+            #doctorReportModal {
+                position: static !important;
+                display: block !important;
+                background: #ffffff !important;
+                padding: 0 !important;
+                width: 100% !important;
+                height: auto !important;
+            }
+            .modal-flat-box {
+                border: none !important;
+                padding: 0 !important;
+                max-width: 100% !important;
+                max-height: none !important;
+                overflow: visible !important;
+            }
+            .doctor-report-sheet {
+                box-shadow: none !important;
+                border: none !important;
+                padding: 0 !important;
+                max-width: 100% !important;
+            }
+            @page {
+                size: A4 portrait;
+                margin: 12mm;
+            }
+        }
     </style>
 </head>
 <body>
@@ -798,7 +870,7 @@ HTML_TEMPLATE = """
     <div class="technical-grid"></div>
 
     <!-- Navigation Header -->
-    <nav>
+    <nav class="no-print">
         <a href="#" class="nav-brand">
             <div class="nav-brand-mark">O</div>
             <div class="nav-brand-text">
@@ -823,7 +895,7 @@ HTML_TEMPLATE = """
     </nav>
 
     <!-- Hero Section -->
-    <section class="hero">
+    <section class="hero no-print">
         <div class="container">
             <div class="hero-meta-bar">
                 <span>SMART INDIA HACKATHON 2026</span>
@@ -845,7 +917,7 @@ HTML_TEMPLATE = """
                 <button onclick="openPitchModal(2)" class="btn-sharp">Technical Methodology</button>
             </div>
 
-            <!-- Flat Telemetry Metrics Bar -->
+            <!-- Telemetry Metrics Bar -->
             <div class="metrics-grid-flat">
                 <div class="metric-cell">
                     <div class="metric-cell-value">&lt; 40 ms</div>
@@ -868,7 +940,7 @@ HTML_TEMPLATE = """
     </section>
 
     <!-- Engineering Pipeline -->
-    <section class="section-box" id="pipeline">
+    <section class="section-box no-print" id="pipeline">
         <div class="container">
             <div class="section-header-flat">
                 <span class="section-header-tag">[ 01 / PIPELINE ARCHITECTURE ]</span>
@@ -913,7 +985,7 @@ HTML_TEMPLATE = """
     </section>
 
     <!-- Interactive Screening Studio -->
-    <section class="section-box" id="screening">
+    <section class="section-box no-print" id="screening">
         <div class="container">
             <div class="section-header-flat">
                 <span class="section-header-tag">[ 02 / DIAGNOSTIC STUDIO ]</span>
@@ -983,14 +1055,12 @@ HTML_TEMPLATE = """
                         <span style="font-family:var(--font-mono); font-size:10px; color:var(--text-muted);">INT8 QUANTIZED</span>
                     </div>
 
-                    <!-- Placeholder -->
                     <div id="emptyPlaceholder" style="padding:60px 20px; text-align:center; border:1px dashed var(--border-color);">
                         <div style="font-family:var(--font-mono); font-size:12px; color:var(--text-muted); text-transform:uppercase;">
                             [ Awaiting Fundus Input — Select preset or upload image ]
                         </div>
                     </div>
 
-                    <!-- Loader -->
                     <div id="scanLoader" style="display:none; padding:60px 20px; text-align:center; font-family:var(--font-mono);">
                         <div style="font-size:14px; font-weight:700; color:var(--accent-gold);">EXECUTING MULTI-MODULE PIPELINE...</div>
                         <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">Laplacian QC → CIELAB CLAHE → Frangi Vessel → Youden-J Grading → Grad-CAM</div>
@@ -1079,7 +1149,7 @@ HTML_TEMPLATE = """
                             <button class="btn-sharp btn-sharp-primary" onclick="showToast('✓ Doctor Approved in <30s: Record Signed')">Approve Case (<30s)</button>
                             <button class="btn-sharp" onclick="showToast('✎ Override Logged: Sent for Panel Review')">Override Grade</button>
                             <button class="btn-sharp" onclick="showToast('⚑ Case Escalated to Vitreo-Retinal Specialist')">Escalate Specialist</button>
-                            <button class="btn-sharp" style="margin-left:auto;" onclick="window.print()">Export Report</button>
+                            <button class="btn-sharp btn-sharp-accent" style="margin-left:auto;" onclick="openDoctorReport()">📄 Export Doctor PDF</button>
                         </div>
                     </div>
                 </div>
@@ -1088,7 +1158,7 @@ HTML_TEMPLATE = """
     </section>
 
     <!-- Operational Risk Matrix -->
-    <section class="section-box" id="matrix">
+    <section class="section-box no-print" id="matrix">
         <div class="container">
             <div class="section-header-flat">
                 <span class="section-header-tag">[ 03 / OPERATIONAL RISK & SAFEGUARDS ]</span>
@@ -1126,7 +1196,7 @@ HTML_TEMPLATE = """
     </section>
 
     <!-- Tele-Triage Simulator -->
-    <section class="section-box" id="simulator">
+    <section class="section-box no-print" id="simulator">
         <div class="container">
             <div class="section-header-flat">
                 <span class="section-header-tag">[ 04 / TELEMEDICINE CAPACITY PROOF ]</span>
@@ -1187,8 +1257,159 @@ HTML_TEMPLATE = """
         </div>
     </section>
 
-    <!-- SIH 2026 Pitch Deck Modal -->
-    <div class="modal-flat-backdrop" id="pitchModal" onclick="closePitchModal(event)">
+    <!-- Dedicated Doctor Clinical Report Modal / Print View -->
+    <div class="modal-flat-backdrop" id="doctorReportModal" onclick="closeDoctorReport(event)">
+        <div class="modal-flat-box" style="max-width:920px; background:#ffffff; color:#000000; padding:24px;" onclick="event.stopPropagation()">
+            
+            <div class="no-print" style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e5e7eb; padding-bottom:12px; margin-bottom:16px;">
+                <span style="font-family:var(--font-mono); font-size:11px; font-weight:700; color:#4b5563; text-transform:uppercase;">
+                    [ DOCTOR CLINICAL DIAGNOSTIC MEMO • EHR EXPORT ]
+                </span>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn-sharp btn-sharp-accent" onclick="window.print()">🖨️ Print / Save as PDF</button>
+                    <button class="btn-sharp" onclick="closeDoctorReport()">[ Close ]</button>
+                </div>
+            </div>
+
+            <!-- The Printable Clinical Report Sheet -->
+            <div class="doctor-report-sheet" id="printableReport">
+                <!-- Report Header -->
+                <div class="doctor-report-header">
+                    <div>
+                        <h2 style="font-family:var(--font-display); font-size:20px; font-weight:700; letter-spacing:-0.5px; text-transform:uppercase;">
+                            OPTINOVA CLINICAL RETINAL DIAGNOSTIC REPORT
+                        </h2>
+                        <div style="font-size:12px; color:#4b5563; margin-top:2px;">
+                            Primary Health Centre (PHC) Tele-Ophthalmology Network • ICDR Screening Protocol
+                        </div>
+                    </div>
+                    <div style="text-align:right; font-family:var(--font-mono); font-size:10px; color:#374151;">
+                        <div><strong>DATE:</strong> <span id="rptDate">2026-09-07</span></div>
+                        <div><strong>STUDY ID:</strong> <span id="rptStudyId">OPT-2026-8821</span></div>
+                        <div><strong>QC STATUS:</strong> <span id="rptQcStatus" style="color:#059669; font-weight:700;">PASSED (τ ≥ 65.0)</span></div>
+                    </div>
+                </div>
+
+                <!-- Diagnosis Summary Box -->
+                <div style="border:2px solid #000000; padding:14px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; background:#f9fafb;">
+                    <div>
+                        <div style="font-size:10px; font-family:var(--font-mono); font-weight:700; color:#6b7280; text-transform:uppercase;">ICDR Disease Severity Classification</div>
+                        <div style="font-family:var(--font-display); font-size:19px; font-weight:800; text-transform:uppercase; color:#111827; margin-top:2px;" id="rptGradeName">
+                            Grade 2: Moderate Non-Proliferative DR
+                        </div>
+                        <div style="font-size:11px; color:#4b5563; margin-top:2px;">
+                            Platt-Calibrated Confidence: <strong id="rptConf">91.4%</strong> • Youden's J Cutoff: <strong id="rptCutoff">Grade ≥2 (Referable)</strong>
+                        </div>
+                    </div>
+                    <div style="border:2px solid #000000; padding:8px 14px; font-family:var(--font-mono); font-size:12px; font-weight:800; text-transform:uppercase; background:#ffffff;" id="rptBadge">
+                        REFERRAL REQUIRED
+                    </div>
+                </div>
+
+                <!-- 4 High-Res Evidence Quad -->
+                <div style="font-family:var(--font-mono); font-size:10px; font-weight:700; color:#374151; text-transform:uppercase; margin-bottom:4px;">
+                    Multi-Spectral Diagnostic Evidence (Modules 1–4)
+                </div>
+                <div class="report-grid-quad">
+                    <div class="report-quad-item">
+                        <img id="rptImgOrig" src="" alt="Raw Acquisition">
+                        <span>1. Raw Capture</span>
+                    </div>
+                    <div class="report-quad-item">
+                        <img id="rptImgEnhanced" src="" alt="CLAHE Contrast">
+                        <span>2. CLAHE (Mod 1)</span>
+                    </div>
+                    <div class="report-quad-item">
+                        <img id="rptImgOverlay" src="" alt="Lesion Segmentation">
+                        <span>3. Lesion Overlay (Mod 2)</span>
+                    </div>
+                    <div class="report-quad-item">
+                        <img id="rptImgGradcam" src="" alt="Grad-CAM Saliency">
+                        <span>4. Grad-CAM XAI (Mod 4)</span>
+                    </div>
+                </div>
+
+                <!-- Biomarker Table -->
+                <table class="report-table-mini">
+                    <thead>
+                        <tr>
+                            <th>Quantitative Retinal Biomarker</th>
+                            <th>Measured Value</th>
+                            <th>Normal Physiological Reference</th>
+                            <th>Pathological Significance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Microaneurysms (MAs)</strong></td>
+                            <td id="rptValMAs">4</td>
+                            <td>0</td>
+                            <td>Earliest hallmark of retinal capillary weakening</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Hard Lipid Exudates</strong></td>
+                            <td id="rptValExudates">2</td>
+                            <td>0</td>
+                            <td>Lipoprotein leakage; indicates Macular Edema risk</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Retinal Hemorrhages</strong></td>
+                            <td id="rptValHems">3</td>
+                            <td>0</td>
+                            <td>Deep dot/blot and superficial flame hemorrhages</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Laplacian Sharpness (Focus τ)</strong></td>
+                            <td id="rptValFocus">84.2</td>
+                            <td>&ge; 65.0</td>
+                            <td>Edge DSP focus threshold for ungradeable drop</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Grad-CAM Spatial IoU Overlap</strong></td>
+                            <td id="rptValIoU">0.52</td>
+                            <td>&ge; 0.45</td>
+                            <td>Correlation between deep activation & anatomical lesions</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Neovascularization (NV)</strong></td>
+                            <td id="rptValNV">None</td>
+                            <td>None</td>
+                            <td>Proliferative DR (NVD/NVE) urgent intervention marker</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Clinical Rationale Pathway -->
+                <div style="border:1px solid #d1d5db; padding:10px 12px; margin-bottom:14px; background:#fafafa;">
+                    <div style="font-family:var(--font-mono); font-size:10px; font-weight:700; color:#374151; text-transform:uppercase; margin-bottom:4px;">
+                        Algorithmic Decision Pathway & Clinical Rationale:
+                    </div>
+                    <div id="rptRationale" style="font-family:var(--font-mono); font-size:11px; color:#1f2937; line-height:1.5; white-space:pre-wrap;"></div>
+                </div>
+
+                <!-- Physician Sign-Off -->
+                <div style="border-top:1px solid #9ca3af; padding-top:12px; display:grid; grid-template-columns:1.5fr 1fr; gap:20px; font-size:11px;">
+                    <div>
+                        <div style="font-weight:700; margin-bottom:4px;">PHYSICIAN ADJUDICATION & ACTIONS:</div>
+                        <div style="display:flex; flex-direction:column; gap:3px; color:#374151;">
+                            <label><input type="checkbox" checked> [X] AI Screening Diagnosis Reviewed & Approved (&lt;30s)</label>
+                            <label><input type="checkbox"> [ ] Refer to Vitreo-Retina Specialist for Dilated Slit-Lamp Exam</label>
+                            <label><input type="checkbox"> [ ] Urgent Anti-VEGF / Panretinal Photocoagulation (PRP) Triage</label>
+                        </div>
+                    </div>
+                    <div style="text-align:right; font-family:var(--font-mono);">
+                        <div style="border-bottom:1px solid #000000; height:32px; margin-bottom:4px;"></div>
+                        <div><strong>REVIEWING OPHTHALMOLOGIST SIGNATURE</strong></div>
+                        <div style="font-size:10px; color:#6b7280;">Reg No: MED-IN-2026-90412</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Pitch Deck Modal -->
+    <div class="modal-flat-backdrop no-print" id="pitchModal" onclick="closePitchModal(event)">
         <div class="modal-flat-box" onclick="event.stopPropagation()">
             <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:16px; margin-bottom:20px;">
                 <div>
@@ -1271,7 +1492,7 @@ HTML_TEMPLATE = """
     <div id="toast">✓ Notification</div>
 
     <!-- Footer -->
-    <footer>
+    <footer class="no-print">
         <div class="container">
             <div class="footer-row">
                 <div style="font-family:var(--font-display); font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">
@@ -1399,6 +1620,57 @@ HTML_TEMPLATE = """
                 loader.style.display = 'none';
                 alert("Execution Error: " + err.message);
             });
+        }
+
+        // Open Dedicated Doctor Clinical Report Sheet
+        function openDoctorReport() {
+            if (!lastScreenData) {
+                alert("Please run or select a screening case first.");
+                return;
+            }
+
+            const now = new Date();
+            document.getElementById('rptDate').innerText = now.toISOString().split('T')[0] + ' ' + now.toTimeString().split(' ')[0];
+            document.getElementById('rptStudyId').innerText = 'OPT-' + now.getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000);
+
+            document.getElementById('rptGradeName').innerText = lastScreenData.grade_name;
+            document.getElementById('rptConf').innerText = (lastScreenData.confidence * 100).toFixed(1) + '%';
+            document.getElementById('rptCutoff').innerText = lastScreenData.referable ? "Grade ≥ 2 (Referable)" : "Grade < 2 (Non-Referable)";
+
+            const badge = document.getElementById('rptBadge');
+            if (lastScreenData.status === 'reject') {
+                badge.innerText = "GATEKEEPER REJECTED";
+                badge.style.color = "#b91c1c";
+                badge.style.borderColor = "#b91c1c";
+            } else if (lastScreenData.referable) {
+                badge.innerText = "REFERRAL REQUIRED";
+                badge.style.color = "#b45309";
+                badge.style.borderColor = "#b45309";
+            } else {
+                badge.innerText = "ROUTINE / CLEAR";
+                badge.style.color = "#047857";
+                badge.style.borderColor = "#047857";
+            }
+
+            document.getElementById('rptImgOrig').src = "data:image/jpeg;base64," + lastScreenData.img_orig;
+            document.getElementById('rptImgEnhanced').src = "data:image/jpeg;base64," + lastScreenData.img_enhanced;
+            document.getElementById('rptImgOverlay').src = "data:image/jpeg;base64," + lastScreenData.img_overlay;
+            document.getElementById('rptImgGradcam').src = "data:image/jpeg;base64," + lastScreenData.img_gradcam;
+
+            document.getElementById('rptValMAs').innerText = lastScreenData.stats.ma_count || 0;
+            document.getElementById('rptValExudates').innerText = lastScreenData.stats.exudate_count || 0;
+            document.getElementById('rptValHems').innerText = lastScreenData.stats.hem_count || 0;
+            document.getElementById('rptValFocus').innerText = lastScreenData.quality.focus_score.toFixed(1);
+            document.getElementById('rptValIoU').innerText = lastScreenData.correlation_score.toFixed(2);
+            document.getElementById('rptValNV').innerText = lastScreenData.stats.nv_flag ? "YES (Active Neovascularization)" : "None";
+
+            document.getElementById('rptRationale').innerText = lastScreenData.rationale;
+
+            document.getElementById('doctorReportModal').style.display = 'flex';
+        }
+
+        function closeDoctorReport(e) {
+            document.getElementById('doctorReportModal').style.display = 'none';
         }
 
         // Split Comparison
