@@ -19,13 +19,13 @@ def assess_and_enhance(img_path, params=None):
     """
     if params is None:
         params = {
-            'focus_min_pass': 110.0,
-            'focus_min_reject': 45.0,
-            'fov_min_pass': 0.70,
-            'fov_min_reject': 0.55,
-            'contrast_min_pass': 32.0,
-            'contrast_min_reject': 18.0,
-            'illum_std_max_pass': 0.16
+            'focus_min_pass': 100.0,
+            'focus_min_reject': 40.0,
+            'fov_min_pass': 0.60,
+            'fov_min_reject': 0.40,
+            'contrast_min_pass': 26.0,
+            'contrast_min_reject': 15.0,
+            'illum_std_max_pass': 0.22
         }
 
     img = cv2.imread(img_path)
@@ -36,12 +36,24 @@ def assess_and_enhance(img_path, params=None):
     b_chan, g_chan, r_chan = cv2.split(img)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    # 1. Field of View (FOV) Mask & Coverage
+    # 1. Field of View (FOV) Mask & Coverage (Normalized against circular aperture for all aspect ratios)
     _, fov_mask = cv2.threshold(gray, 15, 255, cv2.THRESH_BINARY)
     fov_mask = cv2.morphologyEx(fov_mask, cv2.MORPH_CLOSE, np.ones((5,5), np.uint8))
-    fov_area = np.sum(fov_mask > 0)
-    total_area = h * w
-    fov_ratio = fov_area / total_area
+    fov_area = float(np.sum(fov_mask > 0))
+    
+    # Inscribed circle maximum area for this image frame
+    max_circle_area = (np.pi / 4.0) * (min(h, w) ** 2)
+    fov_ratio = float(min(1.0, fov_area / (max_circle_area + 1e-5)))
+
+    # Enclosing circular completeness
+    contours, _ = cv2.findContours(fov_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    if contours:
+        c_max = max(contours, key=cv2.contourArea)
+        (cx, cy), radius = cv2.minEnclosingCircle(c_max)
+        enclosing_area = np.pi * (radius ** 2)
+        fov_completeness = float(fov_area / (enclosing_area + 1e-5))
+    else:
+        fov_completeness = 0.0
 
     # 2. Focus / Sharpness Metric (Laplacian Variance)
     lap = cv2.Laplacian(g_chan, cv2.CV_64F)
@@ -77,6 +89,7 @@ def assess_and_enhance(img_path, params=None):
         'focus_score': focus_score,
         'fft_focus_score': fft_focus_score,
         'fov_ratio': fov_ratio,
+        'fov_completeness': fov_completeness,
         'contrast_score': contrast_score,
         'mean_brightness': mean_brightness,
         'illumination_std': illumination_std
@@ -84,7 +97,7 @@ def assess_and_enhance(img_path, params=None):
 
     # 5. Decision Gatekeeping
     rejection_reason = ""
-    if fov_ratio < params['fov_min_reject']:
+    if fov_ratio < params['fov_min_reject'] and fov_completeness < 0.50:
         status = 'reject'
         rejection_reason = f"Incomplete Field of View (Coverage: {fov_ratio*100:.1f}%, Min: {params['fov_min_reject']*100:.1f}%) — Re-align fundus camera centered on pupil."
     elif focus_score < params['focus_min_reject']:
