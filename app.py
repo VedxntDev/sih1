@@ -2,7 +2,7 @@
 """
 OptiNova AI — Explainable Retinal Intelligence & Diabetic Retinopathy Screening (SIH 2026)
 Smart India Hackathon 2026 | Problem Statement ID: SIH26038 | Theme: MedTech / Clean & Green Software
-Team: Optinova | Hardware: Zero-CAPEX Edge (x86 / ARM / Raspberry Pi 4 / INT8 Quantized)
+Team: Optinova | Precision Architecture & Zero-CAPEX Edge Telemetry
 """
 
 import os
@@ -43,7 +43,7 @@ def sanitize_for_json(obj):
         return [sanitize_for_json(v) for v in obj]
     return obj
 
-def image_to_base64(img_bgr, quality=85):
+def image_to_base64(img_bgr, quality=88):
     """Converts OpenCV BGR image to base64 JPEG string for inline HTML rendering."""
     encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
     _, buffer = cv2.imencode('.jpg', img_bgr, encode_param)
@@ -55,219 +55,182 @@ HTML_TEMPLATE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OptiNova AI | Explainable Retinal Intelligence • SIH 2026</title>
+    <title>OPTINOVA AI — Retinal Intelligence & Clinical DR Screening</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-            --font-display: 'Outfit', sans-serif;
+            --font-display: 'Space Grotesk', -apple-system, sans-serif;
+            --font-main: 'Inter', -apple-system, sans-serif;
             --font-mono: 'JetBrains Mono', monospace;
 
-            /* Dark Theme Variables (Default) */
-            --bg-body: #07080c;
-            --bg-surface: #0e111a;
-            --bg-surface-elevated: #141824;
-            --bg-card: rgba(16, 20, 31, 0.75);
-            --bg-card-hover: rgba(23, 29, 45, 0.9);
-            --bg-badge: rgba(255, 255, 255, 0.06);
-            --border-subtle: rgba(255, 255, 255, 0.09);
-            --border-active: rgba(245, 158, 11, 0.5);
+            /* Dark Theme (Default) - Crisp Architectural Palette */
+            --bg-body: #08090c;
+            --bg-surface: #0f1117;
+            --bg-surface-elevated: #161922;
+            --bg-card: rgba(15, 17, 23, 0.95);
+            --bg-card-hover: #161922;
+            --bg-badge: rgba(255, 255, 255, 0.04);
             
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
-            --text-muted: #64748b;
+            --border-color: #232734;
+            --border-subtle: #1c202b;
+            --border-active: #f59e0b;
+            --border-sharp: 1px solid var(--border-color);
 
-            --accent-gold: #f59e0b;
-            --accent-gold-glow: rgba(245, 158, 11, 0.3);
-            --accent-amber: #d97706;
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+
+            --accent-gold: #d97706;
+            --accent-gold-bright: #f59e0b;
+            --accent-gold-dim: rgba(245, 158, 11, 0.12);
             --accent-emerald: #10b981;
-            --accent-emerald-glow: rgba(16, 185, 129, 0.25);
             --accent-rose: #f43f5e;
-            --accent-rose-glow: rgba(244, 63, 94, 0.25);
             --accent-cyan: #06b6d4;
-            --accent-purple: #a855f7;
 
-            --hero-glow: radial-gradient(circle at 50% 25%, rgba(245, 158, 11, 0.22) 0%, rgba(234, 88, 12, 0.1) 35%, rgba(7, 8, 12, 0) 70%);
-            --hero-glow-secondary: radial-gradient(circle at 80% 60%, rgba(16, 185, 129, 0.12) 0%, transparent 50%);
-            --card-glass-blur: blur(24px);
-            --shadow-subtle: 0 4px 24px rgba(0, 0, 0, 0.4);
-            --shadow-3d: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.07);
-            --shadow-card-hover: 0 24px 60px rgba(245, 158, 11, 0.12), 0 0 0 1px rgba(245, 158, 11, 0.4);
+            --radius-none: 0px;
+            --radius-sm: 2px;
+            --radius-md: 4px;
+
+            --shadow-elevation: 0 4px 20px rgba(0, 0, 0, 0.5);
+            --shadow-sharp: 0 1px 3px rgba(0, 0, 0, 0.8), 0 0 0 1px var(--border-color);
         }
 
         [data-theme="light"] {
             --bg-body: #f8fafc;
             --bg-surface: #ffffff;
             --bg-surface-elevated: #f1f5f9;
-            --bg-card: rgba(255, 255, 255, 0.88);
-            --bg-card-hover: #ffffff;
-            --bg-badge: rgba(15, 23, 42, 0.05);
-            --border-subtle: rgba(15, 23, 42, 0.09);
-            --border-active: rgba(217, 119, 6, 0.5);
+            --bg-card: #ffffff;
+            --bg-card-hover: #f8fafc;
+            --bg-badge: rgba(15, 23, 42, 0.04);
+
+            --border-color: #e2e8f0;
+            --border-subtle: #cbd5e1;
+            --border-active: #d97706;
+            --border-sharp: 1px solid var(--border-color);
 
             --text-primary: #0f172a;
             --text-secondary: #475569;
-            --text-muted: #94a3b8;
+            --text-muted: #64748b;
 
             --accent-gold: #d97706;
-            --accent-gold-glow: rgba(217, 119, 6, 0.2);
-            --accent-amber: #b45309;
+            --accent-gold-bright: #b45309;
+            --accent-gold-dim: rgba(217, 119, 6, 0.08);
             --accent-emerald: #059669;
-            --accent-emerald-glow: rgba(5, 150, 105, 0.2);
             --accent-rose: #e11d48;
-            --accent-rose-glow: rgba(225, 29, 72, 0.2);
             --accent-cyan: #0891b2;
-            --accent-purple: #9333ea;
 
-            --hero-glow: radial-gradient(circle at 50% 20%, rgba(251, 191, 36, 0.3) 0%, rgba(253, 230, 138, 0.15) 40%, rgba(248, 250, 252, 0) 70%);
-            --hero-glow-secondary: radial-gradient(circle at 80% 50%, rgba(16, 185, 129, 0.12) 0%, transparent 50%);
-            --card-glass-blur: blur(24px);
-            --shadow-subtle: 0 4px 24px rgba(15, 23, 42, 0.06);
-            --shadow-3d: 0 20px 50px rgba(15, 23, 42, 0.09), 0 0 0 1px rgba(15, 23, 42, 0.08);
-            --shadow-card-hover: 0 24px 60px rgba(217, 119, 6, 0.12), 0 0 0 1px rgba(217, 119, 6, 0.4);
+            --shadow-elevation: 0 4px 20px rgba(15, 23, 42, 0.06);
+            --shadow-sharp: 0 1px 3px rgba(15, 23, 42, 0.08), 0 0 0 1px var(--border-color);
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+            border-radius: var(--radius-none) !important;
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
         }
 
         body {
             font-family: var(--font-main);
             background-color: var(--bg-body);
             color: var(--text-primary);
-            line-height: 1.6;
-            overflow-x: hidden;
+            line-height: 1.55;
+            letter-spacing: -0.01em;
             -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
         }
 
-        /* 3D Visual Depth & Perspective Container */
-        .perspective-stage {
-            perspective: 1200px;
-        }
-
-        /* Ambient Lighting Auras */
-        .ambient-glow {
+        /* Subtle technical grid background */
+        .technical-grid {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
-            height: 1000px;
-            background: var(--hero-glow);
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .ambient-glow-secondary {
-            position: absolute;
-            top: 600px;
-            right: 0;
-            width: 600px;
-            height: 800px;
-            background: var(--hero-glow-secondary);
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .bg-grid {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 1100px;
-            background-size: 44px 44px;
+            height: 900px;
+            background-size: 32px 32px;
             background-image: 
                 linear-gradient(to right, var(--border-subtle) 1px, transparent 1px),
                 linear-gradient(to bottom, var(--border-subtle) 1px, transparent 1px);
-            mask-image: linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, transparent 85%);
-            -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, transparent 85%);
+            mask-image: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 80%);
+            -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 80%);
             pointer-events: none;
             z-index: 0;
         }
 
-        /* Top Navigation */
+        /* Navigation Header */
         nav {
             position: sticky;
             top: 0;
-            z-index: 200;
+            z-index: 100;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 16px 44px;
-            background: var(--bg-card);
-            backdrop-filter: var(--card-glass-blur);
-            -webkit-backdrop-filter: var(--card-glass-blur);
-            border-bottom: 1px solid var(--border-subtle);
+            padding: 14px 40px;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-color);
         }
 
         .nav-brand {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
             text-decoration: none;
             color: var(--text-primary);
         }
 
-        .nav-logo-3d {
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, var(--accent-gold), #ea580c);
+        .nav-brand-mark {
+            width: 28px;
+            height: 28px;
+            background: var(--text-primary);
+            color: var(--bg-body);
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #ffffff;
-            font-size: 22px;
-            box-shadow: 0 8px 20px var(--accent-gold-glow), inset 0 1px 1px rgba(255,255,255,0.4);
-            transform: rotate(-3deg);
-            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .nav-brand:hover .nav-logo-3d {
-            transform: rotate(6deg) scale(1.08);
-        }
-
-        .nav-logo-text {
             font-family: var(--font-display);
-            font-weight: 800;
-            font-size: 22px;
-            letter-spacing: -0.6px;
+            font-weight: 700;
+            font-size: 14px;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-brand-text {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 19px;
+            letter-spacing: -0.03em;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            text-transform: uppercase;
         }
 
-        .nav-logo-text span {
+        .nav-brand-sub {
+            font-family: var(--font-mono);
             font-size: 10px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 1.2px;
-            padding: 3px 9px;
-            border-radius: 8px;
+            font-weight: 600;
+            padding: 2px 6px;
             background: var(--bg-badge);
+            border: 1px solid var(--border-color);
             color: var(--accent-gold);
-            border: 1px solid var(--border-subtle);
+            letter-spacing: 0.08em;
         }
 
         .nav-links {
             display: flex;
             align-items: center;
-            gap: 26px;
+            gap: 28px;
             list-style: none;
         }
 
         .nav-links a {
             text-decoration: none;
             color: var(--text-secondary);
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 500;
-            position: relative;
-            padding: 4px 0;
-            transition: color 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
         }
 
         .nav-links a:hover {
@@ -277,601 +240,399 @@ HTML_TEMPLATE = """
         .nav-actions {
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 10px;
         }
 
-        .theme-toggle-btn {
-            background: var(--bg-badge);
-            border: 1px solid var(--border-subtle);
-            border-radius: 30px;
-            padding: 7px 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            color: var(--text-secondary);
+        /* Sharp Buttons */
+        .btn-sharp {
+            font-family: var(--font-display);
             font-size: 13px;
             font-weight: 600;
-            font-family: var(--font-main);
-        }
-
-        .theme-toggle-btn:hover {
-            border-color: var(--accent-gold);
+            padding: 8px 16px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-surface);
             color: var(--text-primary);
-            box-shadow: 0 0 15px var(--accent-gold-glow);
-        }
-
-        .btn-pitch-deck {
-            background: var(--bg-badge);
-            color: var(--accent-gold);
-            border: 1px solid var(--accent-gold);
-            border-radius: 30px;
-            padding: 9px 18px;
-            font-weight: 700;
-            font-size: 13px;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-family: var(--font-main);
-        }
-
-        .btn-pitch-deck:hover {
-            background: var(--accent-gold);
-            color: #ffffff;
-            box-shadow: 0 4px 16px var(--accent-gold-glow);
-        }
-
-        .btn-pill-primary {
-            background: var(--text-primary);
-            color: var(--bg-body);
-            border: none;
-            border-radius: 30px;
-            padding: 9px 22px;
-            font-weight: 700;
-            font-size: 13.5px;
-            font-family: var(--font-main);
-            cursor: pointer;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
             text-decoration: none;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+            gap: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
         }
 
-        .btn-pill-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        .btn-sharp:hover {
+            background: var(--bg-surface-elevated);
+            border-color: var(--text-muted);
+        }
+
+        .btn-sharp-primary {
+            background: var(--text-primary);
+            color: var(--bg-body);
+            border: 1px solid var(--text-primary);
+        }
+
+        .btn-sharp-primary:hover {
+            background: var(--accent-gold-bright);
+            color: #000000;
+            border-color: var(--accent-gold-bright);
+        }
+
+        .btn-sharp-accent {
+            background: var(--accent-gold);
+            color: #ffffff;
+            border: 1px solid var(--accent-gold);
+        }
+
+        .btn-sharp-accent:hover {
+            background: var(--accent-gold-bright);
+            border-color: var(--accent-gold-bright);
         }
 
         /* Container */
         .container {
-            max-width: 1320px;
+            max-width: 1280px;
             margin: 0 auto;
             padding: 0 24px;
             position: relative;
             z-index: 1;
         }
 
-        /* Hero Section (superpower.com style with 3D elements) */
+        /* Hero Section */
         .hero {
-            padding: 85px 0 50px 0;
-            text-align: center;
-            position: relative;
+            padding: 80px 0 50px 0;
+            border-bottom: 1px solid var(--border-color);
         }
 
-        .hero-badge-pill {
-            display: inline-flex;
+        .hero-meta-bar {
+            display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 8px 22px;
-            border-radius: 40px;
-            background: var(--bg-card);
-            backdrop-filter: var(--card-glass-blur);
-            border: 1px solid var(--border-subtle);
-            font-size: 13px;
-            font-weight: 700;
+            gap: 12px;
+            font-family: var(--font-mono);
+            font-size: 11px;
             color: var(--accent-gold);
-            margin-bottom: 24px;
-            box-shadow: 0 4px 20px var(--accent-gold-glow);
-            letter-spacing: 0.4px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 20px;
         }
 
-        .hero-badge-pill .pulse-indicator {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--accent-gold);
-            box-shadow: 0 0 12px var(--accent-gold);
-            animation: pulse-ring 2s infinite ease-in-out;
-        }
-
-        @keyframes pulse-ring {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.3; transform: scale(0.7); }
+        .hero-meta-bar span {
+            border: 1px solid var(--border-color);
+            padding: 3px 8px;
+            background: var(--bg-surface);
         }
 
         .hero-title {
             font-family: var(--font-display);
-            font-size: clamp(40px, 5.8vw, 74px);
-            font-weight: 900;
-            line-height: 1.06;
-            letter-spacing: -2px;
+            font-size: clamp(38px, 5.2vw, 68px);
+            font-weight: 700;
+            line-height: 1.05;
+            letter-spacing: -0.04em;
             max-width: 980px;
-            margin: 0 auto 22px auto;
+            margin-bottom: 24px;
+            text-transform: uppercase;
         }
 
-        .hero-title .highlight-gold {
-            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 40%, #ea580c 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            display: inline-block;
-            filter: drop-shadow(0 4px 20px rgba(245, 158, 11, 0.25));
+        .hero-title .accent-text {
+            color: var(--accent-gold-bright);
         }
 
-        .hero-sub {
-            font-size: 19px;
+        .hero-desc {
+            font-size: 17px;
             color: var(--text-secondary);
-            max-width: 740px;
-            margin: 0 auto 38px auto;
-            font-weight: 400;
-            line-height: 1.55;
+            max-width: 720px;
+            line-height: 1.6;
+            margin-bottom: 36px;
         }
 
-        .hero-actions {
+        .hero-action-row {
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 18px;
-            margin-bottom: 56px;
+            gap: 12px;
+            margin-bottom: 60px;
             flex-wrap: wrap;
         }
 
-        .btn-hero-3d {
-            background: linear-gradient(135deg, var(--accent-gold), #ea580c);
-            color: #ffffff;
-            border: none;
-            border-radius: 36px;
-            padding: 16px 36px;
-            font-size: 16px;
-            font-weight: 800;
-            font-family: var(--font-main);
-            cursor: pointer;
-            box-shadow: 0 10px 30px var(--accent-gold-glow), inset 0 1px 1px rgba(255,255,255,0.4);
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
-        }
-
-        .btn-hero-3d:hover {
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 16px 40px var(--accent-gold-glow);
-        }
-
-        .btn-hero-glass {
-            background: var(--bg-card);
-            backdrop-filter: var(--card-glass-blur);
-            color: var(--text-primary);
-            border: 1px solid var(--border-subtle);
-            border-radius: 36px;
-            padding: 16px 32px;
-            font-size: 16px;
-            font-weight: 600;
-            font-family: var(--font-main);
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-            transition: all 0.25s ease;
-        }
-
-        .btn-hero-glass:hover {
-            background: var(--bg-card-hover);
-            border-color: var(--accent-gold);
-            transform: translateY(-2px);
-        }
-
-        /* Hero 3D Metrics Strip */
-        .hero-stats-card {
+        /* Telemetry Metrics Bar */
+        .metrics-grid-flat {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 26px 30px;
-            background: var(--bg-card);
-            backdrop-filter: var(--card-glass-blur);
-            border: 1px solid var(--border-subtle);
-            border-radius: 24px;
-            box-shadow: var(--shadow-3d);
-            transform-style: preserve-3d;
+            border: 1px solid var(--border-color);
+            background: var(--bg-surface);
         }
 
-        .stat-column {
-            text-align: center;
-            border-right: 1px solid var(--border-subtle);
-            padding: 6px 14px;
+        @media (max-width: 900px) {
+            .metrics-grid-flat { grid-template-columns: repeat(2, 1fr); }
+            nav { padding: 14px 20px; }
+            .nav-links { display: none; }
         }
 
-        .stat-column:last-child {
+        @media (max-width: 600px) {
+            .metrics-grid-flat { grid-template-columns: 1fr; }
+        }
+
+        .metric-cell {
+            padding: 24px;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .metric-cell:last-child {
             border-right: none;
         }
 
-        .stat-num {
+        .metric-cell-value {
             font-family: var(--font-display);
             font-size: 32px;
-            font-weight: 900;
+            font-weight: 700;
+            letter-spacing: -0.03em;
             color: var(--text-primary);
-            letter-spacing: -0.8px;
-            line-height: 1.1;
         }
 
-        .stat-subtext {
-            font-size: 12px;
-            font-weight: 700;
+        .metric-cell-label {
+            font-family: var(--font-mono);
+            font-size: 11px;
             color: var(--text-muted);
             text-transform: uppercase;
-            letter-spacing: 0.8px;
+            letter-spacing: 0.05em;
             margin-top: 6px;
         }
 
-        /* Section Titles */
-        .section-header {
-            text-align: center;
-            margin-bottom: 48px;
+        /* Section Layouts */
+        .section-box {
+            padding: 70px 0;
+            border-bottom: 1px solid var(--border-color);
         }
 
-        .section-pill-tag {
-            font-size: 12px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
+        .section-header-flat {
+            margin-bottom: 40px;
+        }
+
+        .section-header-tag {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 600;
             color: var(--accent-gold);
-            margin-bottom: 12px;
-            display: inline-block;
-            background: var(--bg-badge);
-            padding: 4px 14px;
-            border-radius: 20px;
-            border: 1px solid var(--border-subtle);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 8px;
+            display: block;
         }
 
-        .section-title {
+        .section-header-title {
             font-family: var(--font-display);
-            font-size: 38px;
-            font-weight: 800;
-            letter-spacing: -1px;
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            text-transform: uppercase;
             color: var(--text-primary);
-            margin-bottom: 14px;
         }
 
-        .section-desc {
-            font-size: 17px;
+        .section-header-desc {
+            font-size: 15px;
             color: var(--text-secondary);
             max-width: 680px;
-            margin: 0 auto;
+            margin-top: 8px;
         }
 
-        /* 3D Retinal Depth Layers Visualization */
-        .retina-3d-section {
-            padding: 60px 0;
-        }
-
-        .depth-card {
-            background: var(--bg-card);
-            backdrop-filter: var(--card-glass-blur);
-            border: 1px solid var(--border-subtle);
-            border-radius: 28px;
-            padding: 38px;
-            box-shadow: var(--shadow-3d);
-        }
-
-        .depth-grid {
-            display: grid;
-            grid-template-columns: 1.2fr 1fr;
-            gap: 40px;
-            align-items: center;
-        }
-
-        @media (max-width: 980px) {
-            .depth-grid { grid-template-columns: 1fr; }
-            .hero-stats-card { grid-template-columns: repeat(2, 1fr); }
-        }
-
-        .retina-spatial-view {
-            position: relative;
-            width: 100%;
-            height: 380px;
-            background: radial-gradient(circle at 50% 50%, #1f0c04 0%, #0c0502 60%, #000000 100%);
-            border-radius: 20px;
-            border: 1px solid var(--border-subtle);
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            perspective: 800px;
-        }
-
-        .spatial-layer {
-            position: absolute;
-            width: 240px;
-            height: 240px;
-            border-radius: 50%;
-            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-            pointer-events: none;
-        }
-
-        .layer-base {
-            background: radial-gradient(circle at 45% 50%, rgba(220, 38, 38, 0.8) 0%, rgba(153, 27, 27, 0.9) 60%, rgba(69, 10, 10, 0.95) 100%);
-            transform: translateZ(0px) rotateX(15deg);
-            box-shadow: 0 0 40px rgba(220, 38, 38, 0.4);
-        }
-
-        .layer-vessels {
-            border: 2px dashed rgba(254, 240, 138, 0.7);
-            transform: translateZ(40px) rotateX(15deg);
-            background: radial-gradient(circle at 35% 50%, rgba(254, 240, 138, 0.4) 0%, transparent 40%);
-        }
-
-        .layer-lesions {
-            border: 2px solid rgba(244, 63, 94, 0.8);
-            transform: translateZ(80px) rotateX(15deg);
-            box-shadow: 0 0 25px rgba(244, 63, 94, 0.6);
-        }
-
-        .layer-gradcam {
-            background: radial-gradient(circle at 65% 55%, rgba(168, 85, 247, 0.5) 0%, rgba(6, 182, 212, 0.3) 50%, transparent 80%);
-            transform: translateZ(120px) rotateX(15deg);
-            mix-blend-mode: screen;
-        }
-
-        .depth-controls {
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-        }
-
-        .depth-pill {
-            background: var(--bg-surface);
-            border: 1px solid var(--border-subtle);
-            border-radius: 14px;
-            padding: 14px 18px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: pointer;
-            transition: all 0.25s ease;
-        }
-
-        .depth-pill:hover, .depth-pill.active {
-            border-color: var(--accent-gold);
-            background: var(--bg-surface-elevated);
-            transform: translateX(4px);
-        }
-
-        /* 4-Step "How it works" Cards */
-        .how-it-works-section {
-            padding: 60px 0 40px 0;
-        }
-
-        .how-grid-4 {
+        /* 4-Step Architecture Cards */
+        .arch-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 22px;
+            gap: 1px;
+            background: var(--border-color);
+            border: 1px solid var(--border-color);
         }
 
         @media (max-width: 1024px) {
-            .how-grid-4 { grid-template-columns: repeat(2, 1fr); }
+            .arch-grid { grid-template-columns: repeat(2, 1fr); }
         }
 
         @media (max-width: 640px) {
-            .how-grid-4 { grid-template-columns: 1fr; }
+            .arch-grid { grid-template-columns: 1fr; }
         }
 
-        .how-3d-card {
-            background: var(--bg-card);
-            backdrop-filter: var(--card-glass-blur);
-            border: 1px solid var(--border-subtle);
-            border-radius: 24px;
-            padding: 28px 22px;
+        .arch-card {
+            background: var(--bg-surface);
+            padding: 30px 24px;
             display: flex;
             flex-direction: column;
-            position: relative;
-            overflow: hidden;
-            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, border-color 0.3s ease;
-            box-shadow: var(--shadow-subtle);
+            justify-content: space-between;
         }
 
-        .how-3d-card:hover {
-            transform: translateY(-8px) scale(1.02);
-            border-color: var(--border-active);
-            box-shadow: var(--shadow-card-hover);
-        }
-
-        .how-card-num {
-            position: absolute;
-            top: 20px;
-            right: 22px;
-            font-family: var(--font-display);
-            font-size: 28px;
-            font-weight: 900;
-            color: var(--border-subtle);
-        }
-
-        .how-icon-box-3d {
-            width: 52px;
-            height: 52px;
-            border-radius: 14px;
+        .arch-card:hover {
             background: var(--bg-surface-elevated);
-            border: 1px solid var(--border-subtle);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            margin-bottom: 20px;
-            box-shadow: inset 0 1px 1px rgba(255,255,255,0.15);
         }
 
-        .how-card-title {
+        .arch-card-num {
+            font-family: var(--font-mono);
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--accent-gold);
+            margin-bottom: 16px;
+        }
+
+        .arch-card-title {
             font-family: var(--font-display);
-            font-size: 19px;
-            font-weight: 800;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
             color: var(--text-primary);
-            margin-bottom: 10px;
+            margin-bottom: 12px;
+            text-transform: uppercase;
         }
 
-        .how-card-text {
+        .arch-card-text {
             font-size: 13.5px;
             color: var(--text-secondary);
             line-height: 1.6;
         }
 
-        /* Main Screening Studio Workspace */
-        .screening-studio {
-            padding: 50px 0 80px 0;
-        }
-
-        .studio-card-3d {
-            background: var(--bg-card);
-            backdrop-filter: var(--card-glass-blur);
-            border: 1px solid var(--border-subtle);
-            border-radius: 30px;
-            padding: 38px;
-            box-shadow: var(--shadow-3d);
-        }
-
-        .studio-layout {
+        /* Interactive Screening Studio */
+        .studio-grid-flat {
             display: grid;
-            grid-template-columns: 370px 1fr;
-            gap: 36px;
+            grid-template-columns: 360px 1fr;
+            border: 1px solid var(--border-color);
+            background: var(--bg-surface);
         }
 
         @media (max-width: 1024px) {
-            .studio-layout { grid-template-columns: 1fr; }
+            .studio-grid-flat { grid-template-columns: 1fr; }
         }
 
-        .panel-header-sub {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-            padding-bottom: 14px;
-            border-bottom: 1px solid var(--border-subtle);
+        .studio-control-panel {
+            padding: 28px;
+            border-right: 1px solid var(--border-color);
         }
 
-        .panel-heading-title {
+        .studio-display-panel {
+            padding: 28px;
+            background: var(--bg-body);
+        }
+
+        .panel-title-flat {
             font-family: var(--font-display);
-            font-size: 18px;
-            font-weight: 800;
+            font-size: 15px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
             color: var(--text-primary);
+            margin-bottom: 16px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
         }
 
-        /* 3D Drop Zone */
-        .drop-zone-3d {
-            border: 2px dashed var(--border-subtle);
-            border-radius: 20px;
-            padding: 34px 20px;
+        /* Drop Zone */
+        .drop-zone-flat {
+            border: 1px dashed var(--border-color);
+            padding: 30px 16px;
             text-align: center;
-            background: var(--bg-surface);
+            background: var(--bg-surface-elevated);
             cursor: pointer;
-            transition: all 0.25s ease;
-            position: relative;
-            overflow: hidden;
+            margin-bottom: 16px;
         }
 
-        .drop-zone-3d:hover, .drop-zone-3d.dragover {
+        .drop-zone-flat:hover {
             border-color: var(--accent-gold);
             background: var(--bg-badge);
-            box-shadow: 0 0 30px var(--accent-gold-glow);
         }
 
-        .drop-zone-icon-3d {
-            width: 58px;
-            height: 58px;
-            border-radius: 18px;
-            background: var(--bg-surface-elevated);
-            border: 1px solid var(--border-subtle);
+        .preset-list-flat {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            margin: 0 auto 14px auto;
-            color: var(--accent-gold);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+            flex-direction: column;
+            gap: 4px;
+            margin-top: 14px;
         }
 
-        .btn-run-pipeline-3d {
-            width: 100%;
-            margin-top: 18px;
-            padding: 15px;
-            background: linear-gradient(135deg, var(--accent-gold), #ea580c);
-            color: #ffffff;
-            border: none;
-            border-radius: 18px;
-            font-family: var(--font-main);
-            font-weight: 800;
-            font-size: 15px;
-            cursor: pointer;
-            box-shadow: 0 8px 24px var(--accent-gold-glow), inset 0 1px 1px rgba(255,255,255,0.4);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            transition: all 0.25s ease;
-        }
-
-        .btn-run-pipeline-3d:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 30px var(--accent-gold-glow);
-        }
-
-        .btn-run-pipeline-3d:disabled {
-            background: var(--bg-badge);
-            color: var(--text-muted);
-            box-shadow: none;
-            cursor: not-allowed;
-            border: 1px solid var(--border-subtle);
-        }
-
-        .preset-chip-3d {
+        .preset-item-flat {
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
             background: var(--bg-surface);
-            border: 1px solid var(--border-subtle);
-            border-radius: 14px;
-            padding: 11px 14px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             cursor: pointer;
-            transition: all 0.2s ease;
-            margin-bottom: 8px;
+            font-size: 13px;
+            font-weight: 500;
         }
 
-        .preset-chip-3d:hover {
-            border-color: var(--accent-gold);
+        .preset-item-flat:hover {
             background: var(--bg-surface-elevated);
-            transform: translateX(4px);
+            border-color: var(--accent-gold);
         }
 
-        /* Split Screen Comparison Slider */
-        .split-slider-container {
+        .preset-tag-flat {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border: 1px solid var(--border-color);
+            text-transform: uppercase;
+        }
+
+        /* Quad Visual Display */
+        .quad-grid-flat {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 800px) {
+            .quad-grid-flat { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        .quad-card-flat {
+            border: 1px solid var(--border-color);
+            background: var(--bg-surface);
+            padding: 8px;
+            cursor: pointer;
+        }
+
+        .quad-card-flat:hover {
+            border-color: var(--accent-gold);
+        }
+
+        .quad-img-flat {
+            width: 100%;
+            height: 150px;
+            background: #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .quad-img-flat img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .quad-label-flat {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            margin-top: 6px;
+        }
+
+        /* Split Slider Flat */
+        .split-box-flat {
             position: relative;
             width: 100%;
-            height: 240px;
-            border-radius: 16px;
-            overflow: hidden;
+            height: 250px;
             background: #000000;
-            margin-bottom: 24px;
-            border: 1px solid var(--border-subtle);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            margin-bottom: 20px;
             user-select: none;
         }
 
-        .split-slider-img {
+        .split-box-flat img {
             position: absolute;
             top: 0;
             left: 0;
@@ -880,18 +641,17 @@ HTML_TEMPLATE = """
             object-fit: contain;
         }
 
-        .split-slider-overlay {
+        .split-layer-flat {
             position: absolute;
             top: 0;
             left: 0;
             width: 50%;
             height: 100%;
             overflow: hidden;
-            border-right: 2px solid var(--accent-gold);
-            box-shadow: 2px 0 15px var(--accent-gold-glow);
+            border-right: 1px solid var(--accent-gold);
         }
 
-        .split-slider-overlay img {
+        .split-layer-flat img {
             position: absolute;
             top: 0;
             left: 0;
@@ -899,146 +659,88 @@ HTML_TEMPLATE = """
             max-width: none;
         }
 
-        .split-handle {
+        .split-cursor-flat {
             position: absolute;
-            top: 50%;
+            top: 0;
             left: 50%;
-            transform: translate(-50%, -50%);
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
+            height: 100%;
+            width: 2px;
             background: var(--accent-gold);
-            color: #ffffff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            font-weight: 800;
             cursor: ew-resize;
-            box-shadow: 0 0 15px var(--accent-gold-glow);
             z-index: 10;
         }
 
-        /* Quad Visual Overlays */
-        .quad-grid-3d {
+        /* Telemetry Table Flat */
+        .telemetry-grid-flat {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 14px;
-            margin-bottom: 22px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+            background: var(--border-color);
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
         }
 
-        @media (max-width: 900px) {
-            .quad-grid-3d { grid-template-columns: repeat(2, 1fr); }
-        }
-
-        .quad-card-3d {
+        .telemetry-item-flat {
             background: var(--bg-surface);
-            border: 1px solid var(--border-subtle);
-            border-radius: 18px;
-            padding: 10px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.25s ease;
+            padding: 14px 18px;
         }
 
-        .quad-card-3d:hover {
-            border-color: var(--accent-gold);
-            transform: translateY(-4px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-        }
-
-        .quad-img-container {
-            width: 100%;
-            height: 160px;
-            border-radius: 12px;
-            overflow: hidden;
-            background: #000000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .quad-img-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-
-        .quad-tag {
-            font-size: 11.5px;
-            font-weight: 800;
-            color: var(--text-secondary);
-            margin-top: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        /* 3D Risk & Mitigation Matrix Section */
-        .matrix-section {
-            padding: 70px 0;
-            border-top: 1px solid var(--border-subtle);
-        }
-
-        .risk-table-3d {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0 10px;
-        }
-
-        .risk-table-3d th {
-            font-size: 12px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+        .telemetry-item-label {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            font-weight: 600;
             color: var(--text-muted);
-            padding: 12px 20px;
-            text-align: left;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
-        .risk-row {
-            background: var(--bg-card);
-            backdrop-filter: var(--card-glass-blur);
-            border-radius: 16px;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .risk-row td {
-            padding: 18px 20px;
-            border-top: 1px solid var(--border-subtle);
-            border-bottom: 1px solid var(--border-subtle);
-            font-size: 14px;
-        }
-
-        .risk-row td:first-child {
-            border-left: 1px solid var(--border-subtle);
-            border-top-left-radius: 16px;
-            border-bottom-left-radius: 16px;
+        .telemetry-item-value {
+            font-family: var(--font-display);
+            font-size: 20px;
             font-weight: 700;
             color: var(--text-primary);
+            margin-top: 4px;
         }
 
-        .risk-row td:last-child {
-            border-right: 1px solid var(--border-subtle);
-            border-top-right-radius: 16px;
-            border-bottom-right-radius: 16px;
-            color: var(--accent-emerald);
+        /* Technical Data Table */
+        .table-flat {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            font-size: 13.5px;
+        }
+
+        .table-flat th {
+            font-family: var(--font-mono);
+            font-size: 11px;
             font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+            background: var(--bg-surface-elevated);
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
         }
 
-        .risk-row:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-subtle);
+        .table-flat td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-surface);
         }
 
-        /* Pitch Deck Presentation Modal */
-        .pitch-modal-backdrop {
+        .table-flat tr:hover td {
+            background: var(--bg-surface-elevated);
+        }
+
+        /* Modal Overlay Flat */
+        .modal-flat-backdrop {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(0, 0, 0, 0.88);
-            backdrop-filter: blur(14px);
+            background: rgba(0, 0, 0, 0.85);
             z-index: 1000;
             display: none;
             align-items: center;
@@ -1046,289 +748,338 @@ HTML_TEMPLATE = """
             padding: 24px;
         }
 
-        .pitch-modal-box {
-            background: var(--bg-card);
-            border: 1px solid var(--border-subtle);
-            border-radius: 28px;
-            max-width: 960px;
+        .modal-flat-box {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            max-width: 900px;
             width: 100%;
-            max-height: 90vh;
+            max-height: 88vh;
             overflow-y: auto;
-            padding: 36px;
+            padding: 32px;
             position: relative;
-            box-shadow: var(--shadow-3d);
         }
 
-        .pitch-nav-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 24px;
-            border-bottom: 1px solid var(--border-subtle);
-            padding-bottom: 14px;
-            overflow-x: auto;
-        }
-
-        .pitch-tab-btn {
-            background: var(--bg-surface);
-            border: 1px solid var(--border-subtle);
-            border-radius: 20px;
-            padding: 8px 18px;
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--text-secondary);
-            cursor: pointer;
-            white-space: nowrap;
-        }
-
-        .pitch-tab-btn.active {
-            background: var(--accent-gold);
-            color: #ffffff;
-            border-color: var(--accent-gold);
-            box-shadow: 0 4px 14px var(--accent-gold-glow);
-        }
-
-        .slide-content-pane {
-            display: none;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .slide-content-pane.active {
-            display: block;
-        }
-
-        /* Footer */
-        footer {
-            border-top: 1px solid var(--border-subtle);
-            padding: 60px 0 40px 0;
-            background: var(--bg-surface);
-            margin-top: 60px;
-        }
-
-        .footer-grid {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-
-        /* Toast notifications */
+        /* Toast Flat */
         #toast {
             position: fixed;
-            bottom: 30px;
-            right: 30px;
-            padding: 14px 24px;
-            border-radius: 14px;
-            background: var(--bg-card);
+            bottom: 24px;
+            right: 24px;
+            padding: 12px 20px;
+            background: var(--bg-surface);
             border: 1px solid var(--accent-gold);
+            font-family: var(--font-mono);
+            font-size: 12px;
+            font-weight: 600;
             color: var(--text-primary);
-            font-size: 14px;
-            font-weight: 700;
-            box-shadow: var(--shadow-3d);
             z-index: 2000;
             display: none;
-            animation: slideUp 0.3s ease;
         }
 
-        @keyframes slideUp {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+        /* Footer Flat */
+        footer {
+            border-top: 1px solid var(--border-color);
+            padding: 40px 0;
+            background: var(--bg-surface);
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
+        .footer-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-muted);
+            flex-wrap: wrap;
+            gap: 16px;
         }
     </style>
 </head>
 <body>
 
-    <!-- Ambient Visual Glow & Grid -->
-    <div class="ambient-glow"></div>
-    <div class="ambient-glow-secondary"></div>
-    <div class="bg-grid"></div>
+    <div class="technical-grid"></div>
 
-    <!-- Navigation -->
+    <!-- Navigation Header -->
     <nav>
         <a href="#" class="nav-brand">
-            <div class="nav-logo-3d">👁️</div>
-            <div class="nav-logo-text">
-                OptiNova <span>AI</span>
+            <div class="nav-brand-mark">O</div>
+            <div class="nav-brand-text">
+                OPTINOVA <span class="nav-brand-sub">SIH26038</span>
             </div>
         </a>
 
         <ul class="nav-links">
-            <li><a href="#screening">AI Screening</a></li>
-            <li><a href="#how-it-works">Architecture</a></li>
-            <li><a href="#depth-layers">3D Retinal Layers</a></li>
-            <li><a href="#risks">Risk Mitigation</a></li>
-            <li><a href="#telemedicine">Tele-Triage</a></li>
+            <li><a href="#screening">Screening Lab</a></li>
+            <li><a href="#pipeline">Architecture</a></li>
+            <li><a href="#matrix">Risk Matrix</a></li>
+            <li><a href="#simulator">Tele-Triage</a></li>
         </ul>
 
         <div class="nav-actions">
-            <button class="btn-pitch-deck" onclick="openPitchModal(0)">
-                <span>📑 SIH 2026 Pitch Deck</span>
+            <button class="btn-sharp" onclick="openPitchModal(0)">[ 📑 Presentation Deck ]</button>
+            <button class="btn-sharp" id="themeToggle" onclick="toggleTheme()">
+                <span id="themeLabel">THEME: DARK</span>
             </button>
-            <button class="theme-toggle-btn" id="themeToggle" onclick="toggleTheme()">
-                <span id="themeIcon">🌙</span> <span id="themeLabel">Dark</span>
-            </button>
-            <a href="#screening" class="btn-pill-primary">Launch Screening</a>
+            <a href="#screening" class="btn-sharp btn-sharp-primary">Initialize Scan</a>
         </div>
     </nav>
 
     <!-- Hero Section -->
     <section class="hero">
         <div class="container">
-            <div class="hero-badge-pill">
-                <span class="pulse-indicator"></span>
-                <span>SMART INDIA HACKATHON 2026 • SIH26038 (TEAM OPTINOVA)</span>
+            <div class="hero-meta-bar">
+                <span>SMART INDIA HACKATHON 2026</span>
+                <span>MEDTECH / SOFTWARE</span>
+                <span>ZERO-CAPEX EDGE TELEMETRY</span>
             </div>
 
             <h1 class="hero-title">
-                Eliminate preventable blindness with <span class="highlight-gold">retinal intelligence</span>.
+                EXPLAINABLE AI FOR <span class="accent-text">DIABETIC RETINOPATHY</span> SCREENING.
             </h1>
 
-            <p class="hero-sub">
-                A MATLAB-native, zero-CAPEX explainable AI screening system providing automated quality gating, multi-class DR severity grading, Grad-CAM heatmaps, and queue routing for rural health clinics.
+            <p class="hero-desc">
+                A MATLAB-native clinical screening system delivering edge Laplacian image quality gating (<40 ms), calibrated multi-class DR grading, and transparent Grad-CAM explainability across rural primary health centres.
             </p>
 
-            <div class="hero-actions">
-                <a href="#screening" class="btn-hero-3d">
-                    <span>✦ Launch AI Screening Studio</span>
-                </a>
-                <button onclick="selectSample('sample_06_moderate_dr.png')" class="btn-hero-glass">
-                    <span>⚡ Load Moderate DR Benchmark</span>
-                </button>
-                <button onclick="openPitchModal(2)" class="btn-hero-glass">
-                    <span>🔬 Technical Approach</span>
-                </button>
+            <div class="hero-action-row">
+                <a href="#screening" class="btn-sharp btn-sharp-primary">Launch Screening Studio</a>
+                <button onclick="selectSample('sample_06_moderate_dr.png')" class="btn-sharp">Load Benchmark Sample</button>
+                <button onclick="openPitchModal(2)" class="btn-sharp">Technical Methodology</button>
             </div>
 
-            <!-- Hero Stats Strip (SIH Data Grounding) -->
-            <div class="hero-stats-card">
-                <div class="stat-column">
-                    <div class="stat-num">&lt; 40 ms</div>
-                    <div class="stat-subtext">Laplacian Edge QC</div>
+            <!-- Flat Telemetry Metrics Bar -->
+            <div class="metrics-grid-flat">
+                <div class="metric-cell">
+                    <div class="metric-cell-value">&lt; 40 ms</div>
+                    <div class="metric-cell-label">Edge Laplacian QC Gate</div>
                 </div>
-                <div class="stat-column">
-                    <div class="stat-num">&gt; 90%</div>
-                    <div class="stat-subtext">Referable Sensitivity</div>
+                <div class="metric-cell">
+                    <div class="metric-cell-value">&gt; 90%</div>
+                    <div class="metric-cell-label">Referable Sensitivity (Grade ≥2)</div>
                 </div>
-                <div class="stat-column">
-                    <div class="stat-num">136,875</div>
-                    <div class="stat-subtext">Annual District Hub Capacity</div>
+                <div class="metric-cell">
+                    <div class="metric-cell-value">136,875</div>
+                    <div class="metric-cell-label">Annual Hub Patient Volume</div>
                 </div>
-                <div class="stat-column">
-                    <div class="stat-num">&lt; 30 sec</div>
-                    <div class="stat-subtext">Remote Doctor Sign-off</div>
+                <div class="metric-cell">
+                    <div class="metric-cell-value">&lt; 30 sec</div>
+                    <div class="metric-cell-label">Doctor Verification Turnaround</div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- 4-Step Technical Pipeline Section -->
-    <section class="how-it-works-section" id="how-it-works">
+    <!-- Engineering Pipeline -->
+    <section class="section-box" id="pipeline">
         <div class="container">
-            <div class="section-header">
-                <span class="section-pill-tag">Engineering Pipeline</span>
-                <h2 class="section-title">End-to-End Technical Architecture</h2>
-                <p class="section-desc">From edge Laplacian sharpness gating to sub-second Grad-CAM explainability and bandwidth-resilient telemetry.</p>
+            <div class="section-header-flat">
+                <span class="section-header-tag">[ 01 / PIPELINE ARCHITECTURE ]</span>
+                <h2 class="section-header-title">Technical Methodology & Signal Processing</h2>
+                <p class="section-header-desc">Engineered for deterministic sub-watt execution on commodity hardware with zero diagnostic latency.</p>
             </div>
 
-            <div class="how-grid-4">
-                <div class="how-3d-card">
-                    <span class="how-card-num">01</span>
-                    <div class="how-icon-box-3d">🛡️</div>
-                    <h3 class="how-card-title">Edge DSP & QC</h3>
-                    <p class="how-card-text">
-                        <strong>Laplacian Sharpness Check:</strong> Drops blurred scans locally (<code>Var(∇²I) &lt; τ</code>) in &lt;40 ms before uplink transmission. <strong>CIELAB CLAHE:</strong> Normalizes uneven illumination across diverse fundus scopes.
+            <div class="arch-grid">
+                <div class="arch-card">
+                    <span class="arch-card-num">MOD 01</span>
+                    <h3 class="arch-card-title">Edge DSP & QC</h3>
+                    <p class="arch-card-text">
+                        <strong>Laplacian Sharpness:</strong> Drops blurred captures locally (<code>Var(∇²I) &lt; τ</code>) in &lt;40 ms. <strong>CIELAB CLAHE:</strong> Normalizes non-uniform illumination across camera sensor models.
                     </p>
                 </div>
 
-                <div class="how-3d-card">
-                    <span class="how-card-num">02</span>
-                    <div class="how-icon-box-3d">🔬</div>
-                    <h3 class="how-card-title">Vessel & Lesions</h3>
-                    <p class="how-card-text">
-                        <strong>Frangi Multiscale Filtering:</strong> Extracts vessel tree topology. Green-channel top-hat morphology isolates microaneurysms (&lt;125 µm), dot-blot hemorrhages, and hard lipid exudates.
+                <div class="arch-card">
+                    <span class="arch-card-num">MOD 02</span>
+                    <h3 class="arch-card-title">Vessel & Lesions</h3>
+                    <p class="arch-card-text">
+                        <strong>Frangi Filter:</strong> Extracts 2D multiscale vessel eigenvalues. Green-channel top-hat morphology isolates microaneurysms (&lt;125 µm), hemorrhages, and lipid exudates.
                     </p>
                 </div>
 
-                <div class="how-3d-card">
-                    <span class="how-card-num">03</span>
-                    <div class="how-icon-box-3d">📊</div>
-                    <h3 class="how-card-title">Calibrated Grading</h3>
-                    <p class="how-card-text">
-                        <strong>Cost-Sensitive Inference:</strong> EfficientNet-B0 tuned via Youden's J-index enforcing &gt;90% sensitivity on Referable DR (Grade ≥2) with Platt-calibrated probability thresholds.
+                <div class="arch-card">
+                    <span class="arch-card-num">MOD 03</span>
+                    <h3 class="arch-card-title">Calibrated Grading</h3>
+                    <p class="arch-card-text">
+                        <strong>Cost-Sensitive Inference:</strong> EfficientNet-B0 tuned via Youden's J-Index enforcing &gt;90% sensitivity on Grade ≥2 with Platt-calibrated probability thresholds.
                     </p>
                 </div>
 
-                <div class="how-3d-card">
-                    <span class="how-card-num">04</span>
-                    <div class="how-icon-box-3d">💡</div>
-                    <h3 class="how-card-title">XAI & Telemetry</h3>
-                    <p class="how-card-text">
-                        <strong>Grad-CAM Localization:</strong> Backpropagates target gradients onto lesion clusters for doctor sign-off in &lt;30s. <strong>WebP + SQLite Store-and-Forward:</strong> Shrinks payloads by 96% with offline fault tolerance.
+                <div class="arch-card">
+                    <span class="arch-card-num">MOD 04</span>
+                    <h3 class="arch-card-title">XAI & Telemetry</h3>
+                    <p class="arch-card-text">
+                        <strong>Grad-CAM:</strong> Projects gradient heatmaps for doctor verification in &lt;30s. <strong>WebP + SQLite Queue:</strong> Compresses payload to &lt;400 KB (96% reduction) with offline store-and-forward.
                     </p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- 3D Retinal Depth Layers Visualization -->
-    <section class="retina-3d-section" id="depth-layers">
+    <!-- Interactive Screening Studio -->
+    <section class="section-box" id="screening">
         <div class="container">
-            <div class="depth-card">
-                <div class="depth-grid">
-                    <div>
-                        <span class="section-pill-tag">Spatial Decomposition</span>
-                        <h2 class="section-title" style="font-size:30px; margin-bottom:12px;">Interactive 3D Retinal Depth Map</h2>
-                        <p class="section-desc" style="font-size:15px; margin-bottom:22px;">
-                            Click each anatomical layer to explore how OptiNova's computer vision filters isolate individual biomarkers in 3D retinal space.
-                        </p>
+            <div class="section-header-flat">
+                <span class="section-header-tag">[ 02 / DIAGNOSTIC STUDIO ]</span>
+                <h2 class="section-header-title">Live Retinal Inference Workspace</h2>
+                <p class="section-header-desc">Upload a clinical fundus scan or select an audited benchmark dataset case.</p>
+            </div>
 
-                        <div class="depth-controls">
-                            <div class="depth-pill active" onclick="activateLayer('base', this)">
-                                <div>
-                                    <strong style="font-size:14px; color:var(--text-primary);">Layer 1: Fundus CIELAB Canvas</strong>
-                                    <p style="font-size:12px; color:var(--text-secondary); margin-top:2px;">Illumination-equalized retinal background & optic disc anchor</p>
-                                </div>
-                                <span style="font-size:18px;">🔴</span>
+            <div class="studio-grid-flat">
+                <!-- Control Panel -->
+                <div class="studio-control-panel">
+                    <div class="panel-title-flat">
+                        <span>Fundus Acquisition</span>
+                        <span style="font-family:var(--font-mono); font-size:10px; color:var(--accent-gold);">UVC / V4L2</span>
+                    </div>
+
+                    <div class="drop-zone-flat" id="dropZone" onclick="document.getElementById('fileInput').click()">
+                        <div style="font-family:var(--font-mono); font-size:11px; font-weight:700; color:var(--text-primary); text-transform:uppercase;">
+                            [ Click or Drop Image ]
+                        </div>
+                        <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Supports PNG, JPG, or DICOM</div>
+                        <input type="file" id="fileInput" accept="image/*" style="display:none;" onchange="handleFileSelect(event)">
+                    </div>
+
+                    <div id="fileSelectionText" style="font-family:var(--font-mono); font-size:11px; color:var(--accent-gold); margin-bottom:12px;"></div>
+
+                    <button class="btn-sharp btn-sharp-accent" id="btnRun" style="width:100%; justify-content:center;" onclick="runScreening()" disabled>
+                        Execute AI Pipeline
+                    </button>
+
+                    <div style="margin-top:24px;">
+                        <div style="font-family:var(--font-mono); font-size:10px; font-weight:700; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px;">
+                            Clinical Benchmark Presets:
+                        </div>
+                        <div class="preset-list-flat">
+                            <div class="preset-item-flat" onclick="selectSample('sample_01_clear.png')">
+                                <span>Grade 0: Normal Retina</span>
+                                <span class="preset-tag-flat" style="color:var(--accent-emerald);">Normal</span>
                             </div>
-
-                            <div class="depth-pill" onclick="activateLayer('vessels', this)">
-                                <div>
-                                    <strong style="font-size:14px; color:var(--text-primary);">Layer 2: Frangi 2D Vessel Tree</strong>
-                                    <p style="font-size:12px; color:var(--text-secondary); margin-top:2px;">Multiscale directional eigenvalues isolating arteriolar caliber</p>
-                                </div>
-                                <span style="font-size:18px;">🟡</span>
+                            <div class="preset-item-flat" onclick="selectSample('sample_02_low_contrast.png')">
+                                <span>Low Contrast Scan</span>
+                                <span class="preset-tag-flat" style="color:var(--accent-gold);">CLAHE</span>
                             </div>
-
-                            <div class="depth-pill" onclick="activateLayer('lesions', this)">
-                                <div>
-                                    <strong style="font-size:14px; color:var(--text-primary);">Layer 3: Microaneurysms & Exudates</strong>
-                                    <p style="font-size:12px; color:var(--text-secondary); margin-top:2px;">Green top-hat morphology segmenting discrete micro-lesions</p>
-                                </div>
-                                <span style="font-size:18px;">🩸</span>
+                            <div class="preset-item-flat" onclick="selectSample('sample_03_blurry.png')">
+                                <span>Blurry Scan</span>
+                                <span class="preset-tag-flat" style="color:var(--accent-rose);">Drop &lt;τ</span>
                             </div>
-
-                            <div class="depth-pill" onclick="activateLayer('gradcam', this)">
-                                <div>
-                                    <strong style="font-size:14px; color:var(--text-primary);">Layer 4: Grad-CAM Saliency Field</strong>
-                                    <p style="font-size:12px; color:var(--text-secondary); margin-top:2px;">Gradient backpropagation highlighting decisive pathological triggers</p>
-                                </div>
-                                <span style="font-size:18px;">🔮</span>
+                            <div class="preset-item-flat" onclick="selectSample('sample_06_moderate_dr.png')">
+                                <span>Grade 2: Moderate DR</span>
+                                <span class="preset-tag-flat" style="color:var(--accent-gold);">Referable</span>
+                            </div>
+                            <div class="preset-item-flat" onclick="selectSample('sample_07_severe_dr.png')">
+                                <span>Grade 3: Severe DR</span>
+                                <span class="preset-tag-flat" style="color:var(--accent-rose);">Hemorrhage</span>
+                            </div>
+                            <div class="preset-item-flat" onclick="selectSample('sample_08_proliferative_dr.png')">
+                                <span>Grade 4: Proliferative</span>
+                                <span class="preset-tag-flat" style="color:var(--accent-rose);">Urgent NV</span>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <div class="retina-spatial-view" id="spatialViewport">
-                        <div class="spatial-layer layer-base" id="layerBase"></div>
-                        <div class="spatial-layer layer-vessels" id="layerVessels"></div>
-                        <div class="spatial-layer layer-lesions" id="layerLesions"></div>
-                        <div class="spatial-layer layer-gradcam" id="layerGradcam"></div>
-                        <div style="position:absolute; bottom:14px; font-size:11px; color:var(--text-muted); z-index:10; font-family:var(--font-mono);">
-                            OptiNova 3D Spatial Retinal Engine • Multi-Spectral
+                <!-- Results Output Panel -->
+                <div class="studio-display-panel">
+                    <div class="panel-title-flat">
+                        <span>Diagnostic Telemetry & Explainability</span>
+                        <span style="font-family:var(--font-mono); font-size:10px; color:var(--text-muted);">INT8 QUANTIZED</span>
+                    </div>
+
+                    <!-- Placeholder -->
+                    <div id="emptyPlaceholder" style="padding:60px 20px; text-align:center; border:1px dashed var(--border-color);">
+                        <div style="font-family:var(--font-mono); font-size:12px; color:var(--text-muted); text-transform:uppercase;">
+                            [ Awaiting Fundus Input — Select preset or upload image ]
+                        </div>
+                    </div>
+
+                    <!-- Loader -->
+                    <div id="scanLoader" style="display:none; padding:60px 20px; text-align:center; font-family:var(--font-mono);">
+                        <div style="font-size:14px; font-weight:700; color:var(--accent-gold);">EXECUTING MULTI-MODULE PIPELINE...</div>
+                        <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">Laplacian QC → CIELAB CLAHE → Frangi Vessel → Youden-J Grading → Grad-CAM</div>
+                    </div>
+
+                    <!-- Results View -->
+                    <div id="resultsContainer" style="display:none;">
+                        <!-- Status Banner -->
+                        <div style="border:1px solid var(--border-color); background:var(--bg-surface); padding:16px 20px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <div style="font-family:var(--font-display); font-size:20px; font-weight:700; text-transform:uppercase;" id="resGradeTitle">Grade 2: Moderate DR</div>
+                                <div style="font-family:var(--font-mono); font-size:12px; color:var(--text-secondary); margin-top:2px;" id="resConfidence">Confidence: 91.4% • Platt-Calibrated</div>
+                            </div>
+                            <div id="resUrgencyBadge" style="font-family:var(--font-mono); font-size:11px; font-weight:700; padding:6px 12px; border:1px solid var(--border-color); text-transform:uppercase;">
+                                REFERRAL REQUIRED
+                            </div>
+                        </div>
+
+                        <!-- Split Comparison Box -->
+                        <div class="split-box-flat" id="splitSlider">
+                            <img id="splitImgBase" src="" alt="Raw Base">
+                            <div class="split-layer-flat" id="splitOverlay">
+                                <img id="splitImgOverlay" src="" alt="Enhanced Overlay">
+                            </div>
+                            <div class="split-cursor-flat" id="splitHandle"></div>
+                        </div>
+
+                        <!-- 4 Quad Views -->
+                        <div class="quad-grid-flat">
+                            <div class="quad-card-flat" onclick="setSplitMode('orig', 'Raw')">
+                                <div class="quad-img-flat"><img id="imgOrig" src="" alt="Raw"></div>
+                                <div class="quad-label-flat">1. Raw Acquisition</div>
+                            </div>
+                            <div class="quad-card-flat" onclick="setSplitMode('enhanced', 'CLAHE')">
+                                <div class="quad-img-flat"><img id="imgEnhanced" src="" alt="Enhanced"></div>
+                                <div class="quad-label-flat">2. CLAHE (Mod 1)</div>
+                            </div>
+                            <div class="quad-card-flat" onclick="setSplitMode('overlay', 'Masks')">
+                                <div class="quad-img-flat"><img id="imgOverlay" src="" alt="Overlay"></div>
+                                <div class="quad-label-flat">3. Lesion Overlay</div>
+                            </div>
+                            <div class="quad-card-flat" onclick="setSplitMode('gradcam', 'Grad-CAM')">
+                                <div class="quad-img-flat"><img id="imgGradcam" src="" alt="Grad-CAM"></div>
+                                <div class="quad-label-flat">4. Grad-CAM XAI</div>
+                            </div>
+                        </div>
+
+                        <!-- Telemetry Grid -->
+                        <div class="telemetry-grid-flat">
+                            <div class="telemetry-item-flat">
+                                <div class="telemetry-item-label">Microaneurysms</div>
+                                <div class="telemetry-item-value" id="bmMAs">0</div>
+                            </div>
+                            <div class="telemetry-item-flat">
+                                <div class="telemetry-item-label">Hard Exudates</div>
+                                <div class="telemetry-item-value" id="bmExudates">0</div>
+                            </div>
+                            <div class="telemetry-item-flat">
+                                <div class="telemetry-item-label">Hemorrhages</div>
+                                <div class="telemetry-item-value" id="bmHems">0</div>
+                            </div>
+                            <div class="telemetry-item-flat">
+                                <div class="telemetry-item-label">Laplacian Focus (τ)</div>
+                                <div class="telemetry-item-value" id="bmFocus">0.0</div>
+                            </div>
+                            <div class="telemetry-item-flat">
+                                <div class="telemetry-item-label">Grad-CAM IoU Overlap</div>
+                                <div class="telemetry-item-value" id="bmCorrelation">0.00</div>
+                            </div>
+                            <div class="telemetry-item-flat">
+                                <div class="telemetry-item-label">Neovascularization</div>
+                                <div class="telemetry-item-value" id="bmNV">None</div>
+                            </div>
+                        </div>
+
+                        <!-- Rationale -->
+                        <div style="border:1px solid var(--border-color); background:var(--bg-surface); padding:16px; margin-bottom:16px;">
+                            <div style="font-family:var(--font-mono); font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:8px;">
+                                [ CLINICAL DECISION RATIONALE — ICDR PROTOCOL ]
+                            </div>
+                            <div id="resRationaleText" style="font-family:var(--font-mono); font-size:12px; color:var(--text-secondary); line-height:1.6; white-space:pre-wrap;"></div>
+                        </div>
+
+                        <!-- Doctor Actions -->
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <button class="btn-sharp btn-sharp-primary" onclick="showToast('✓ Doctor Approved in <30s: Record Signed')">Approve Case (<30s)</button>
+                            <button class="btn-sharp" onclick="showToast('✎ Override Logged: Sent for Panel Review')">Override Grade</button>
+                            <button class="btn-sharp" onclick="showToast('⚑ Case Escalated to Vitreo-Retinal Specialist')">Escalate Specialist</button>
+                            <button class="btn-sharp" style="margin-left:auto;" onclick="window.print()">Export Report</button>
                         </div>
                     </div>
                 </div>
@@ -1336,249 +1087,16 @@ HTML_TEMPLATE = """
         </div>
     </section>
 
-    <!-- Main Screening Studio Workspace -->
-    <section class="screening-studio" id="screening">
+    <!-- Operational Risk Matrix -->
+    <section class="section-box" id="matrix">
         <div class="container">
-            <div class="studio-card-3d">
-                <div class="studio-layout">
-
-                    <!-- Left: Control & Image Input -->
-                    <div>
-                        <div class="panel-header-sub">
-                            <div class="panel-heading-title">
-                                <span>📷</span> Edge Image Acquisition
-                            </div>
-                            <span style="font-size:11px; color:var(--accent-emerald); font-weight:700;">UVC/V4L2 Compatible</span>
-                        </div>
-
-                        <div class="drop-zone-3d" id="dropZone" onclick="document.getElementById('fileInput').click()">
-                            <div class="drop-zone-icon-3d">📸</div>
-                            <div style="font-weight:800; font-size:15px; color:var(--text-primary); margin-bottom:4px;">Upload Fundus Capture</div>
-                            <div style="font-size:12px; color:var(--text-muted);">Supports standard PNG, JPG, or DICOM fundus scopes</div>
-                            <input type="file" id="fileInput" accept="image/*" style="display:none;" onchange="handleFileSelect(event)">
-                        </div>
-                        <div id="fileSelectionText" style="font-size:12px; color:var(--accent-gold); font-weight:700; margin-top:8px; text-align:center;"></div>
-
-                        <button class="btn-run-pipeline-3d" id="btnRun" onclick="runScreening()" disabled>
-                            <span>🚀 Run OptiNova AI Inference</span>
-                        </button>
-
-                        <div style="margin-top:24px;">
-                            <div style="font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted); margin-bottom:12px; display:flex; justify-content:space-between;">
-                                <span>Clinical Benchmark Cases</span>
-                                <span>Kaggle APTOS & Messidor-2</span>
-                            </div>
-
-                            <div class="preset-chip-3d" onclick="selectSample('sample_01_clear.png')">
-                                <div style="display:flex; align-items:center; gap:10px;">
-                                    <span>🟢</span>
-                                    <div style="font-size:13px; font-weight:700;">Grade 0: Normal Retina</div>
-                                </div>
-                                <span style="font-size:10px; font-weight:800; padding:2px 8px; border-radius:6px; background:rgba(16,185,129,0.15); color:var(--accent-emerald);">Clear</span>
-                            </div>
-
-                            <div class="preset-chip-3d" onclick="selectSample('sample_02_low_contrast.png')">
-                                <div style="display:flex; align-items:center; gap:10px;">
-                                    <span>🟡</span>
-                                    <div style="font-size:13px; font-weight:700;">Low Contrast Image</div>
-                                </div>
-                                <span style="font-size:10px; font-weight:800; padding:2px 8px; border-radius:6px; background:rgba(245,158,11,0.15); color:var(--accent-gold);">CLAHE Fix</span>
-                            </div>
-
-                            <div class="preset-chip-3d" onclick="selectSample('sample_03_blurry.png')">
-                                <div style="display:flex; align-items:center; gap:10px;">
-                                    <span>🔴</span>
-                                    <div style="font-size:13px; font-weight:700;">Blurry Scan (&lt;40ms QC)</div>
-                                </div>
-                                <span style="font-size:10px; font-weight:800; padding:2px 8px; border-radius:6px; background:rgba(244,63,94,0.15); color:var(--accent-rose);">Drop &lt;τ</span>
-                            </div>
-
-                            <div class="preset-chip-3d" onclick="selectSample('sample_06_moderate_dr.png')">
-                                <div style="display:flex; align-items:center; gap:10px;">
-                                    <span>🟠</span>
-                                    <div style="font-size:13px; font-weight:700;">Grade 2: Moderate DR</div>
-                                </div>
-                                <span style="font-size:10px; font-weight:800; padding:2px 8px; border-radius:6px; background:rgba(168,85,247,0.15); color:var(--accent-purple);">Referable</span>
-                            </div>
-
-                            <div class="preset-chip-3d" onclick="selectSample('sample_07_severe_dr.png')">
-                                <div style="display:flex; align-items:center; gap:10px;">
-                                    <span>🔴</span>
-                                    <div style="font-size:13px; font-weight:700;">Grade 3: Severe DR</div>
-                                </div>
-                                <span style="font-size:10px; font-weight:800; padding:2px 8px; border-radius:6px; background:rgba(244,63,94,0.15); color:var(--accent-rose);">Hemorrhages</span>
-                            </div>
-
-                            <div class="preset-chip-3d" onclick="selectSample('sample_08_proliferative_dr.png')">
-                                <div style="display:flex; align-items:center; gap:10px;">
-                                    <span>🟣</span>
-                                    <div style="font-size:13px; font-weight:700;">Grade 4: Proliferative PDR</div>
-                                </div>
-                                <span style="font-size:10px; font-weight:800; padding:2px 8px; border-radius:6px; background:rgba(244,63,94,0.15); color:var(--accent-rose);">Urgent NV</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Right: Diagnostic Output -->
-                    <div>
-                        <div class="panel-header-sub">
-                            <div class="panel-heading-title">
-                                <span>🔬</span> Multi-Module Diagnostic & Explainability Studio
-                            </div>
-                            <span style="font-size:12px; color:var(--text-muted);">Real-Time INT8 Inference</span>
-                        </div>
-
-                        <!-- Initial Empty State -->
-                        <div id="emptyPlaceholder" style="border:1px dashed var(--border-subtle); border-radius:20px; padding:70px 24px; text-align:center; background:var(--bg-surface);">
-                            <div style="font-size:42px; margin-bottom:12px;">👁️</div>
-                            <h4 style="font-family:var(--font-display); font-size:19px; font-weight:800; margin-bottom:6px; color:var(--text-primary);">Awaiting Retinal Image</h4>
-                            <p style="font-size:14px; color:var(--text-secondary); max-width:440px; margin:0 auto;">
-                                Upload a fundus scan or select a benchmark preset on the left to execute Modules 1 to 5 with Grad-CAM explainability.
-                            </p>
-                        </div>
-
-                        <!-- Processing State -->
-                        <div id="scanLoader" style="display:none; padding:70px 20px; text-align:center;">
-                            <div style="font-family:var(--font-display); font-size:22px; font-weight:800; color:var(--text-primary); margin-bottom:8px;">
-                                Executing Neural Pipeline...
-                            </div>
-                            <p style="font-size:13.5px; color:var(--text-muted); font-family:var(--font-mono);">
-                                Laplacian QC → CIELAB CLAHE → Frangi Vessel Segmentation → Youden-J Grading → Grad-CAM
-                            </p>
-                            <div style="display:flex; justify-content:center; gap:10px; margin-top:24px;">
-                                <div style="width:12px; height:12px; border-radius:50%; background:var(--accent-gold); animation:pulse-ring 1s infinite;"></div>
-                                <div style="width:12px; height:12px; border-radius:50%; background:var(--accent-emerald); animation:pulse-ring 1.2s infinite;"></div>
-                                <div style="width:12px; height:12px; border-radius:50%; background:var(--accent-purple); animation:pulse-ring 1.4s infinite;"></div>
-                            </div>
-                        </div>
-
-                        <!-- Diagnostic Results Container -->
-                        <div id="resultsContainer" style="display:none; animation:fadeIn 0.35s ease;">
-
-                            <!-- Severity Banner -->
-                            <div id="resBanner" style="background:var(--bg-surface); border:1px solid var(--border-subtle); border-radius:20px; padding:22px 26px; margin-bottom:20px; display:flex; align-items:center; justify-content:space-between; position:relative;">
-                                <div>
-                                    <h3 id="resGradeTitle" style="font-family:var(--font-display); font-size:23px; font-weight:900; color:var(--text-primary);">Grade 2: Moderate NPDR</h3>
-                                    <p id="resConfidence" style="font-size:13px; color:var(--text-secondary); margin-top:4px;">Calibrated Confidence: 91.4% • Platt-Calibrated</p>
-                                </div>
-                                <span id="resUrgencyBadge" style="padding:8px 18px; border-radius:30px; font-weight:800; font-size:12px; letter-spacing:0.6px; text-transform:uppercase;">REFERRAL REQUIRED</span>
-                            </div>
-
-                            <!-- Interactive Split Comparison Slider -->
-                            <div class="split-slider-container" id="splitSlider">
-                                <img id="splitImgBase" class="split-slider-img" src="" alt="Base Image">
-                                <div class="split-slider-overlay" id="splitOverlay">
-                                    <img id="splitImgOverlay" src="" alt="Overlay Image">
-                                </div>
-                                <div class="split-handle" id="splitHandle">↔</div>
-                            </div>
-
-                            <!-- 4-Quad Visual Studio -->
-                            <div class="quad-grid-3d">
-                                <div class="quad-card-3d" onclick="setSplitMode('orig', 'Enhanced CLAHE')">
-                                    <div class="quad-img-container">
-                                        <img id="imgOrig" src="" alt="Raw">
-                                    </div>
-                                    <div class="quad-tag">1. Raw Capture</div>
-                                </div>
-
-                                <div class="quad-card-3d" onclick="setSplitMode('enhanced', 'CLAHE Contrast')">
-                                    <div class="quad-img-container">
-                                        <img id="imgEnhanced" src="" alt="Enhanced">
-                                    </div>
-                                    <div class="quad-tag">2. CLAHE (Mod 1)</div>
-                                </div>
-
-                                <div class="quad-card-3d" onclick="setSplitMode('overlay', 'Lesion Masks')">
-                                    <div class="quad-img-container">
-                                        <img id="imgOverlay" src="" alt="Overlay">
-                                    </div>
-                                    <div class="quad-tag">3. Lesion Overlay</div>
-                                </div>
-
-                                <div class="quad-card-3d" onclick="setSplitMode('gradcam', 'Grad-CAM Saliency')">
-                                    <div class="quad-img-container">
-                                        <img id="imgGradcam" src="" alt="Grad-CAM">
-                                    </div>
-                                    <div class="quad-tag">4. Grad-CAM XAI</div>
-                                </div>
-                            </div>
-
-                            <!-- Biomarker Telemetry Grid -->
-                            <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; margin-bottom:20px;">
-                                <div style="background:var(--bg-surface); border:1px solid var(--border-subtle); border-radius:14px; padding:12px 16px;">
-                                    <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Microaneurysms</div>
-                                    <div style="font-family:var(--font-display); font-size:22px; font-weight:800; color:var(--text-primary);" id="bmMAs">0</div>
-                                </div>
-
-                                <div style="background:var(--bg-surface); border:1px solid var(--border-subtle); border-radius:14px; padding:12px 16px;">
-                                    <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Hard Exudates</div>
-                                    <div style="font-family:var(--font-display); font-size:22px; font-weight:800; color:var(--text-primary);" id="bmExudates">0</div>
-                                </div>
-
-                                <div style="background:var(--bg-surface); border:1px solid var(--border-subtle); border-radius:14px; padding:12px 16px;">
-                                    <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Hemorrhages</div>
-                                    <div style="font-family:var(--font-display); font-size:22px; font-weight:800; color:var(--text-primary);" id="bmHems">0</div>
-                                </div>
-
-                                <div style="background:var(--bg-surface); border:1px solid var(--border-subtle); border-radius:14px; padding:12px 16px;">
-                                    <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Laplacian Focus (τ)</div>
-                                    <div style="font-family:var(--font-display); font-size:22px; font-weight:800; color:var(--accent-emerald);" id="bmFocus">0.0</div>
-                                </div>
-
-                                <div style="background:var(--bg-surface); border:1px solid var(--border-subtle); border-radius:14px; padding:12px 16px;">
-                                    <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Grad-CAM IoU Overlap</div>
-                                    <div style="font-family:var(--font-display); font-size:22px; font-weight:800; color:var(--accent-gold);" id="bmCorrelation">0.00</div>
-                                </div>
-
-                                <div style="background:var(--bg-surface); border:1px solid var(--border-subtle); border-radius:14px; padding:12px 16px;">
-                                    <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Neovascularization</div>
-                                    <div style="font-family:var(--font-display); font-size:22px; font-weight:800; color:var(--accent-purple);" id="bmNV">None</div>
-                                </div>
-                            </div>
-
-                            <!-- Clinical Rationale Box -->
-                            <div style="background:var(--bg-surface); border:1px solid var(--border-subtle); border-radius:16px; padding:18px; margin-bottom:20px;">
-                                <div style="font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-primary); margin-bottom:8px; display:flex; align-items:center; gap:6px;">
-                                    <span>📋</span> Explainable AI Clinical Rationale (ICDR Protocol)
-                                </div>
-                                <div id="resRationaleText" style="font-family:var(--font-mono); font-size:12px; color:var(--text-secondary); line-height:1.6; background:var(--bg-body); padding:12px; border-radius:10px; border:1px solid var(--border-subtle); white-space:pre-wrap;"></div>
-                            </div>
-
-                            <!-- Doctor Actions -->
-                            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                                <button onclick="showToast('✓ Doctor Approved in <30s: Case Cleared')" style="padding:11px 18px; border-radius:12px; background:var(--accent-emerald); color:#fff; border:none; font-weight:700; font-size:13px; cursor:pointer;">
-                                    ✓ Approve Diagnosis (&lt;30s)
-                                </button>
-                                <button onclick="showToast('✎ Override Logged: Flagged for Panel Adjudication')" style="padding:11px 18px; border-radius:12px; background:var(--bg-surface); color:var(--text-primary); border:1px solid var(--border-subtle); font-weight:700; font-size:13px; cursor:pointer;">
-                                    ✎ Clinical Override
-                                </button>
-                                <button onclick="showToast('⚑ Case Escalated to Vitreo-Retinal Specialist')" style="padding:11px 18px; border-radius:12px; background:rgba(168,85,247,0.15); color:var(--accent-purple); border:1px solid rgba(168,85,247,0.3); font-weight:700; font-size:13px; cursor:pointer;">
-                                    ⚑ Escalate Specialist
-                                </button>
-                                <button onclick="window.print()" style="margin-left:auto; padding:11px 18px; border-radius:12px; background:var(--bg-surface); color:var(--text-muted); border:1px solid var(--border-subtle); font-weight:700; font-size:13px; cursor:pointer;">
-                                    🖨️ Export PDF
-                                </button>
-                            </div>
-
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Operational & Clinical Risk Mitigation Table (Slide 4 Details) -->
-    <section class="matrix-section" id="risks">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-pill-tag">Clinical & Operational Safeguards</span>
-                <h2 class="section-title">Risk & Engineering Mitigation Matrix</h2>
-                <p class="section-desc">Audited fail-safes designed specifically for high-volume rural tele-ophthalmology.</p>
+            <div class="section-header-flat">
+                <span class="section-header-tag">[ 03 / OPERATIONAL RISK & SAFEGUARDS ]</span>
+                <h2 class="section-header-title">Risk & Technical Mitigation Matrix</h2>
+                <p class="section-header-desc">Engineered fail-safes designed for rural clinical environments.</p>
             </div>
 
-            <table class="risk-table-3d">
+            <table class="table-flat">
                 <thead>
                     <tr>
                         <th>Root Vulnerability</th>
@@ -1587,181 +1105,163 @@ HTML_TEMPLATE = """
                     </tr>
                 </thead>
                 <tbody>
-                    <tr class="risk-row">
-                        <td>Diagnostic Leakage (False Negatives)</td>
-                        <td>High cost of missing proliferative DR (Grade ≥2) under standard symmetric cross-entropy loss.</td>
-                        <td><strong>Youden's J-Index Asymmetric Thresholding:</strong> Biases the ROC operating boundary toward &gt;90% recall.</td>
+                    <tr>
+                        <td><strong>Diagnostic Leakage (False Negatives)</strong></td>
+                        <td>High cost of missing proliferative DR (Grade ≥2) under standard symmetric loss.</td>
+                        <td><strong>Youden's J-Index Asymmetric Thresholding:</strong> Biases the ROC operating boundary toward &gt;90% recall on referable cases.</td>
                     </tr>
-                    <tr class="risk-row">
-                        <td>Rural Backhaul Jitter & Outages</td>
-                        <td>Sub-2 Mbps links, high packet latency, and intermittent cellular dropouts in rural clinics.</td>
-                        <td><strong>WebP Quantization + SQLite Store-and-Forward:</strong> Shrinks payload by 96% (&lt;400 KB) with offline caching.</td>
+                    <tr>
+                        <td><strong>Rural Backhaul Jitter & Outages</strong></td>
+                        <td>Sub-2 Mbps links, high packet latency, and cellular dropouts in rural clinics.</td>
+                        <td><strong>WebP Quantization + SQLite Store-and-Forward:</strong> Shrinks payload by 96% (&lt;400 KB) with offline queue caching.</td>
                     </tr>
-                    <tr class="risk-row">
-                        <td>Cross-Sensor Domain Shift</td>
-                        <td>Variations in optical resolution, field of view (FOV), and colour sensor profiles across camera models.</td>
-                        <td><strong>CIELAB Contrast Equalization & Heavy Augmentation:</strong> Normalizes luminance via CLAHE; trained across APTOS & Messidor-2.</td>
+                    <tr>
+                        <td><strong>Cross-Sensor Domain Shift</strong></td>
+                        <td>Variations in optical resolution, field of view, and sensor color profiles.</td>
+                        <td><strong>CIELAB Contrast Equalization:</strong> Normalizes luminance via CLAHE; trained across APTOS 2019 & Messidor-2 datasets.</td>
                     </tr>
                 </tbody>
             </table>
         </div>
     </section>
 
-    <!-- Telemedicine Queue Simulator Section (Slide 5 Impact) -->
-    <section class="how-it-works-section" id="telemedicine" style="border-top:1px solid var(--border-subtle); padding-top:70px;">
+    <!-- Tele-Triage Simulator -->
+    <section class="section-box" id="simulator">
         <div class="container">
-            <div class="studio-card-3d">
-                <div class="section-header" style="margin-bottom:30px;">
-                    <span class="section-pill-tag">Discrete-Event Simulink Validation</span>
-                    <h2 class="section-title">136,875 Annual Patient Capacity Proof</h2>
-                    <p class="section-desc">Simulate patient queue dynamics and bandwidth optimization over 2 Mbps rural links.</p>
-                </div>
+            <div class="section-header-flat">
+                <span class="section-header-tag">[ 04 / TELEMEDICINE CAPACITY PROOF ]</span>
+                <h2 class="section-header-title">136,875 Annual Patient Throughput Simulator</h2>
+                <p class="section-header-desc">Discrete-event queue modeling across rural clinic networks.</p>
+            </div>
 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:36px; align-items:center;">
-                    <div>
-                        <div style="margin-bottom:20px;">
-                            <div style="display:flex; justify-content:space-between; font-size:13.5px; font-weight:700; margin-bottom:8px;">
-                                <span>Connected Rural Clinics</span>
-                                <span style="color:var(--accent-gold);" id="lblClinics">25 Clinics</span>
-                            </div>
-                            <input type="range" min="5" max="60" value="25" id="sliderClinics" oninput="updateSim()" style="width:100%; accent-color:var(--accent-gold);">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:24px; border:1px solid var(--border-color); background:var(--bg-surface); padding:28px;">
+                <div>
+                    <div style="margin-bottom:20px;">
+                        <div style="display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:12px; font-weight:600; margin-bottom:6px;">
+                            <span>CONNECTED RURAL CLINICS</span>
+                            <span style="color:var(--accent-gold);" id="lblClinics">25 CLINICS</span>
                         </div>
-
-                        <div style="margin-bottom:20px;">
-                            <div style="display:flex; justify-content:space-between; font-size:13.5px; font-weight:700; margin-bottom:8px;">
-                                <span>Ophthalmologists on Shift</span>
-                                <span style="color:var(--accent-gold);" id="lblDoctors">4 Doctors</span>
-                            </div>
-                            <input type="range" min="1" max="10" value="4" id="sliderDoctors" oninput="updateSim()" style="width:100%; accent-color:var(--accent-gold);">
-                        </div>
-
-                        <div style="margin-bottom:20px;">
-                            <div style="display:flex; justify-content:space-between; font-size:13.5px; font-weight:700; margin-bottom:8px;">
-                                <span>Uplink Bandwidth per Clinic</span>
-                                <span style="color:var(--accent-gold);" id="lblBandwidth">2.0 Mbps</span>
-                            </div>
-                            <input type="range" min="0.5" max="10" step="0.5" value="2.0" id="sliderBandwidth" oninput="updateSim()" style="width:100%; accent-color:var(--accent-gold);">
-                        </div>
-
-                        <p style="font-size:13px; color:var(--text-muted); line-height:1.5;">
-                            ⚡ <strong>80% Specialist Workload Reduction:</strong> Auto-triage resolves 60% of healthy cases locally, routing only confirmed Referable DR cases (Level 2+) to district ophthalmologists.
-                        </p>
+                        <input type="range" min="5" max="60" value="25" id="sliderClinics" oninput="updateSim()" style="width:100%; accent-color:var(--accent-gold);">
                     </div>
 
-                    <div style="background:var(--bg-surface); border:1px solid var(--border-subtle); border-radius:20px; padding:26px;">
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
-                            <div style="background:var(--bg-card); padding:16px; border-radius:14px; border:1px solid var(--border-subtle);">
-                                <div style="font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase;">Annual Patients</div>
-                                <div style="font-family:var(--font-display); font-size:26px; font-weight:900; color:var(--text-primary); margin-top:4px;" id="simCapacity">136,875</div>
-                            </div>
-
-                            <div style="background:var(--bg-card); padding:16px; border-radius:14px; border:1px solid var(--border-subtle);">
-                                <div style="font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase;">Doctor Utilization</div>
-                                <div style="font-family:var(--font-display); font-size:26px; font-weight:900; color:var(--accent-emerald); margin-top:4px;" id="simDoctorUtil">78.2%</div>
-                            </div>
-
-                            <div style="background:var(--bg-card); padding:16px; border-radius:14px; border:1px solid var(--border-subtle);">
-                                <div style="font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase;">Avg Triage Latency</div>
-                                <div style="font-family:var(--font-display); font-size:26px; font-weight:900; color:var(--accent-gold); margin-top:4px;" id="simWaitTime">3.4 min</div>
-                            </div>
-
-                            <div style="background:var(--bg-card); padding:16px; border-radius:14px; border:1px solid var(--border-subtle);">
-                                <div style="font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase;">WebP Payload Transmission</div>
-                                <div style="font-family:var(--font-display); font-size:26px; font-weight:900; color:var(--accent-purple); margin-top:4px;" id="simUploadDelay">1.6s</div>
-                            </div>
+                    <div style="margin-bottom:20px;">
+                        <div style="display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:12px; font-weight:600; margin-bottom:6px;">
+                            <span>OPHTHALMOLOGISTS ON SHIFT</span>
+                            <span style="color:var(--accent-gold);" id="lblDoctors">4 DOCTORS</span>
                         </div>
+                        <input type="range" min="1" max="10" value="4" id="sliderDoctors" oninput="updateSim()" style="width:100%; accent-color:var(--accent-gold);">
+                    </div>
+
+                    <div style="margin-bottom:20px;">
+                        <div style="display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:12px; font-weight:600; margin-bottom:6px;">
+                            <span>UPLINK BANDWIDTH PER CLINIC</span>
+                            <span style="color:var(--accent-gold);" id="lblBandwidth">2.0 MBPS</span>
+                        </div>
+                        <input type="range" min="0.5" max="10" step="0.5" value="2.0" id="sliderBandwidth" oninput="updateSim()" style="width:100%; accent-color:var(--accent-gold);">
+                    </div>
+
+                    <p style="font-size:13px; color:var(--text-muted); line-height:1.5;">
+                        ⚡ <strong>80% Specialist Workload Reduction:</strong> Auto-triage resolves 60% of healthy cases locally, routing only confirmed Referable DR cases to district ophthalmologists.
+                    </p>
+                </div>
+
+                <div class="telemetry-grid-flat" style="margin-bottom:0;">
+                    <div class="telemetry-item-flat">
+                        <div class="telemetry-item-label">Annual Patients</div>
+                        <div class="telemetry-item-value" id="simCapacity">136,875</div>
+                    </div>
+                    <div class="telemetry-item-flat">
+                        <div class="telemetry-item-label">Doctor Utilization</div>
+                        <div class="telemetry-item-value" id="simDoctorUtil" style="color:var(--accent-emerald);">78.2%</div>
+                    </div>
+                    <div class="telemetry-item-flat">
+                        <div class="telemetry-item-label">Average Triage Wait</div>
+                        <div class="telemetry-item-value" id="simWaitTime" style="color:var(--accent-gold);">3.4 min</div>
+                    </div>
+                    <div class="telemetry-item-flat">
+                        <div class="telemetry-item-label">WebP Upload Delay</div>
+                        <div class="telemetry-item-value" id="simUploadDelay">1.6s</div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- SIH 2026 Pitch Deck Modal (Slides 1 to 6) -->
-    <div class="pitch-modal-backdrop" id="pitchModal" onclick="closePitchModal(event)">
-        <div class="pitch-modal-box" onclick="event.stopPropagation()">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+    <!-- SIH 2026 Pitch Deck Modal -->
+    <div class="modal-flat-backdrop" id="pitchModal" onclick="closePitchModal(event)">
+        <div class="modal-flat-box" onclick="event.stopPropagation()">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:16px; margin-bottom:20px;">
                 <div>
-                    <span style="font-size:11px; font-weight:800; color:var(--accent-gold); text-transform:uppercase; letter-spacing:1px;">SMART INDIA HACKATHON 2026</span>
-                    <h3 style="font-family:var(--font-display); font-size:22px; font-weight:900; color:var(--text-primary);">Optinova Pitch Deck (SIH26038)</h3>
+                    <span style="font-family:var(--font-mono); font-size:11px; color:var(--accent-gold); text-transform:uppercase;">SMART INDIA HACKATHON 2026</span>
+                    <h3 style="font-family:var(--font-display); font-size:20px; font-weight:700; text-transform:uppercase;">OPTINOVA PRESENTATION DECK (SIH26038)</h3>
                 </div>
-                <button onclick="closePitchModal()" style="background:var(--bg-badge); border:1px solid var(--border-subtle); width:36px; height:36px; border-radius:50%; color:var(--text-primary); cursor:pointer; font-size:18px;">&times;</button>
+                <button class="btn-sharp" onclick="closePitchModal()">[ CLOSE ]</button>
             </div>
 
-            <div class="pitch-nav-tabs">
-                <button class="pitch-tab-btn active" onclick="switchPitchSlide(0, this)">Slide 1: Title & Theme</button>
-                <button class="pitch-tab-btn" onclick="switchPitchSlide(1, this)">Slide 2: Objective</button>
-                <button class="pitch-tab-btn" onclick="switchPitchSlide(2, this)">Slide 3: Tech Approach</button>
-                <button class="pitch-tab-btn" onclick="switchPitchSlide(3, this)">Slide 4: Feasibility & Edge</button>
-                <button class="pitch-tab-btn" onclick="switchPitchSlide(4, this)">Slide 5: Impact & Scale</button>
-                <button class="pitch-tab-btn" onclick="switchPitchSlide(5, this)">Slide 6: Research & Refs</button>
+            <div style="display:flex; gap:6px; margin-bottom:20px; flex-wrap:wrap;">
+                <button class="btn-sharp" onclick="switchPitchSlide(0, this)">Slide 1: Title</button>
+                <button class="btn-sharp" onclick="switchPitchSlide(1, this)">Slide 2: Objective</button>
+                <button class="btn-sharp" onclick="switchPitchSlide(2, this)">Slide 3: Approach</button>
+                <button class="btn-sharp" onclick="switchPitchSlide(3, this)">Slide 4: Feasibility</button>
+                <button class="btn-sharp" onclick="switchPitchSlide(4, this)">Slide 5: Impact</button>
+                <button class="btn-sharp" onclick="switchPitchSlide(5, this)">Slide 6: References</button>
             </div>
 
-            <!-- Slide 1 -->
-            <div class="slide-content-pane active" id="slide0">
-                <h4 style="font-size:20px; font-weight:800; color:var(--text-primary); margin-bottom:10px;">SMART INDIA HACKATHON 2026</h4>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:16px;">
-                    <div style="background:var(--bg-surface); padding:16px; border-radius:14px; border:1px solid var(--border-subtle);">
-                        <strong style="color:var(--accent-gold);">Problem Statement ID:</strong> SIH26038<br>
-                        <strong style="color:var(--accent-gold);">Title:</strong> Explainable AI for Diabetic Retinopathy Screening in Rural India
-                    </div>
-                    <div style="background:var(--bg-surface); padding:16px; border-radius:14px; border:1px solid var(--border-subtle);">
-                        <strong style="color:var(--accent-gold);">Theme:</strong> MedTech / Clean & Green technology<br>
-                        <strong style="color:var(--accent-gold);">PS Category:</strong> Software | <strong>Team:</strong> Optinova
-                    </div>
-                </div>
+            <!-- Slides Content -->
+            <div class="slide-pane" id="slide0">
+                <h4 style="font-family:var(--font-display); font-size:18px; font-weight:700; margin-bottom:12px; text-transform:uppercase;">Slide 1 — Title Page</h4>
+                <p style="font-size:14px; color:var(--text-secondary); line-height:1.7;">
+                    <strong>Problem Statement ID:</strong> SIH26038<br>
+                    <strong>Title:</strong> Explainable AI for Diabetic Retinopathy Screening in Rural India<br>
+                    <strong>Theme:</strong> MedTech / Clean & Green technology<br>
+                    <strong>PS Category:</strong> Software | <strong>Team:</strong> Optinova
+                </p>
             </div>
 
-            <!-- Slide 2 -->
-            <div class="slide-content-pane" id="slide1">
-                <h4 style="font-size:20px; font-weight:800; color:var(--text-primary); margin-bottom:10px;">Idea Objective</h4>
-                <p style="font-size:15px; color:var(--text-secondary); line-height:1.7;">
+            <div class="slide-pane" id="slide1" style="display:none;">
+                <h4 style="font-family:var(--font-display); font-size:18px; font-weight:700; margin-bottom:12px; text-transform:uppercase;">Slide 2 — Idea Objective</h4>
+                <p style="font-size:14px; color:var(--text-secondary); line-height:1.7;">
                     To eliminate preventable blindness in rural India by building a MATLAB-native, explainable AI screening system that provides automated quality gating, multi-class DR severity grading, visual Grad-CAM heatmap telemetry, and optimized telemedicine queue routing for rural health clinics.
                 </p>
             </div>
 
-            <!-- Slide 3 -->
-            <div class="slide-content-pane" id="slide2">
-                <h4 style="font-size:20px; font-weight:800; color:var(--text-primary); margin-bottom:14px;">Technical Approach</h4>
-                <ul style="color:var(--text-secondary); font-size:14px; line-height:1.8; padding-left:20px;">
+            <div class="slide-pane" id="slide2" style="display:none;">
+                <h4 style="font-family:var(--font-display); font-size:18px; font-weight:700; margin-bottom:12px; text-transform:uppercase;">Slide 3 — Technical Approach</h4>
+                <ul style="font-size:14px; color:var(--text-secondary); line-height:1.8; padding-left:18px;">
                     <li><strong>Laplacian Sharpness Check:</strong> Drops blurred scans locally (<code>Var(∇²I) &lt; τ</code>) in &lt;40 ms before uplink transmission.</li>
-                    <li><strong>CIELAB & Vessel Filtering:</strong> CLAHE normalizes illumination; green-channel top-hat morphology isolates lesions.</li>
+                    <li><strong>CIELAB & Vessel Filtering:</strong> CLAHE normalizes illumination; green-channel top-hat isolates lesions.</li>
                     <li><strong>Cost-Sensitive Classification:</strong> EfficientNet-B0 tuned via Youden's J-index enforcing &gt;90% sensitivity on Grade ≥2.</li>
                     <li><strong>Grad-CAM Localization:</strong> Backpropagates gradients for remote doctor verification in &lt;30 seconds.</li>
-                    <li><strong>WebP + Offline SQLite Store-and-Forward:</strong> Compresses payload to &lt;400 KB with offline local caching.</li>
+                    <li><strong>WebP + Offline SQLite Queue:</strong> Compresses payload to &lt;400 KB with offline local store-and-forward caching.</li>
                 </ul>
             </div>
 
-            <!-- Slide 4 -->
-            <div class="slide-content-pane" id="slide3">
-                <h4 style="font-size:20px; font-weight:800; color:var(--text-primary); margin-bottom:14px;">Feasibility & Zero-CAPEX Edge Runtime</h4>
-                <ul style="color:var(--text-secondary); font-size:14px; line-height:1.8; padding-left:20px;">
-                    <li><strong>Hardware Compatibility:</strong> Commodity x86 & 64-bit ARM (Intel Core i3 / Raspberry Pi 4 / Android POS).</li>
-                    <li><strong>Memory & Footprint:</strong> &lt;1.2 GB peak RAM; model quantized via dynamic INT8 precision for sub-watt edge inference.</li>
-                    <li><strong>Zero CAPEX:</strong> Standard UVC/V4L2 camera protocols with legacy non-mydriatic fundus scopes at rural PHCs.</li>
+            <div class="slide-pane" id="slide3" style="display:none;">
+                <h4 style="font-family:var(--font-display); font-size:18px; font-weight:700; margin-bottom:12px; text-transform:uppercase;">Slide 4 — Feasibility & Edge Runtime</h4>
+                <ul style="font-size:14px; color:var(--text-secondary); line-height:1.8; padding-left:18px;">
+                    <li><strong>Zero-CAPEX Hardware:</strong> Commodity x86 & 64-bit ARM (Intel Core i3 / Raspberry Pi 4 / Android POS).</li>
+                    <li><strong>Memory & Footprint:</strong> &lt;1.2 GB peak RAM; model quantized via INT8 precision for sub-watt edge inference.</li>
                     <li><strong>Clinical Validation:</strong> Trained on Kaggle APTOS 2019 (3,662 samples), validated on Messidor-2 (1,748 images), EyePACS, and DRIVE.</li>
                 </ul>
             </div>
 
-            <!-- Slide 5 -->
-            <div class="slide-content-pane" id="slide4">
-                <h4 style="font-size:20px; font-weight:800; color:var(--text-primary); margin-bottom:14px;">Impact & Community Benefits</h4>
-                <ul style="color:var(--text-secondary); font-size:14px; line-height:1.8; padding-left:20px;">
+            <div class="slide-pane" id="slide4" style="display:none;">
+                <h4 style="font-family:var(--font-display); font-size:18px; font-weight:700; margin-bottom:12px; text-transform:uppercase;">Slide 5 — Impact & Benefits</h4>
+                <ul style="font-size:14px; color:var(--text-secondary); line-height:1.8; padding-left:18px;">
                     <li><strong>Prevents Blindness:</strong> Diagnoses early-stage DR (Levels 1 & 2) directly at rural Primary Health Centres (PHCs).</li>
-                    <li><strong>Reduces Expense:</strong> Eliminates non-essential travel costs by resolving 60% of healthy cases locally.</li>
-                    <li><strong>80% Specialist Workload Reduction:</strong> Auto-triage routes only confirmed Referable cases (Level 2+) to specialists.</li>
-                    <li><strong>136,875 Patients/Year:</strong> Discrete-event Simulink modeling proves district capacity with zero queue backlog.</li>
+                    <li><strong>80% Specialist Workload Reduction:</strong> Auto-triage routes only confirmed Referable cases (Level 2+) to district ophthalmologists.</li>
+                    <li><strong>136,875 Patients/Year:</strong> Discrete-event Simulink modeling proves capacity to handle annual screening volume with zero queue backlog.</li>
                 </ul>
             </div>
 
-            <!-- Slide 6 -->
-            <div class="slide-content-pane" id="slide5">
-                <h4 style="font-size:20px; font-weight:800; color:var(--text-primary); margin-bottom:14px;">Research & Clinical References</h4>
-                <ul style="color:var(--text-secondary); font-size:14px; line-height:1.8; padding-left:20px;">
+            <div class="slide-pane" id="slide5" style="display:none;">
+                <h4 style="font-family:var(--font-display); font-size:18px; font-weight:700; margin-bottom:12px; text-transform:uppercase;">Slide 6 — Research & References</h4>
+                <ul style="font-size:14px; color:var(--text-secondary); line-height:1.8; padding-left:18px;">
                     <li><strong>ICDR Scale:</strong> International Clinical Diabetic Retinopathy Scale (Levels 0–4).</li>
                     <li><strong>Grad-CAM:</strong> Selvaraju, R. R., et al. ICCV 2017.</li>
                     <li><strong>Frangi Filtering:</strong> Frangi, A. F., et al. MICCAI 1998.</li>
-                    <li><strong>Datasets:</strong> Kaggle APTOS 2019 (3,662 imgs), Messidor-2 (1,748 imgs), DRIVE Database.</li>
-                    <li><strong>Frameworks:</strong> MathWorks MATLAB (Deep Learning gradCAM, adapthisteq, Simulink SimEvents), National Health Portal (NHP) India.</li>
+                    <li><strong>Datasets:</strong> Kaggle APTOS 2019, Messidor-2, DRIVE Database.</li>
+                    <li><strong>Frameworks:</strong> MathWorks MATLAB Toolboxes & National Health Portal (NHP) India.</li>
                 </ul>
             </div>
         </div>
@@ -1773,16 +1273,15 @@ HTML_TEMPLATE = """
     <!-- Footer -->
     <footer>
         <div class="container">
-            <div class="footer-grid">
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <div class="nav-logo-3d" style="width:32px; height:32px; font-size:18px;">👁️</div>
-                    <span style="font-family:var(--font-display); font-weight:900; font-size:18px;">OptiNova AI</span>
+            <div class="footer-row">
+                <div style="font-family:var(--font-display); font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">
+                    OPTINOVA AI • SIH26038
                 </div>
-                <div style="font-size:13px; color:var(--text-muted);">
-                    Smart India Hackathon 2026 (SIH26038) • Team Optinova • Zero-CAPEX Rural Retinal Intelligence
+                <div>
+                    SMART INDIA HACKATHON 2026 • ZERO-CAPEX CLINICAL TELE-OPHTHALMOLOGY
                 </div>
-                <div style="font-size:12px; color:var(--accent-gold); font-weight:700;">
-                    🟢 All 5 Pipeline Modules Active
+                <div style="font-family:var(--font-mono); color:var(--accent-gold);">
+                    [ ALL 5 MODULES OPERATIONAL ]
                 </div>
             </div>
         </div>
@@ -1793,33 +1292,20 @@ HTML_TEMPLATE = """
         let selectedSampleName = null;
         let lastScreenData = null;
 
-        // Theme Toggle (Dark & Light Mode)
+        // Theme Toggle
         function toggleTheme() {
             const html = document.documentElement;
             const currentTheme = html.getAttribute('data-theme');
             const newTheme = currentTheme === 'light' ? 'dark' : 'light';
             html.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
-            updateThemeUI(newTheme);
+            document.getElementById('themeLabel').innerText = "THEME: " + newTheme.toUpperCase();
         }
 
-        function updateThemeUI(theme) {
-            const icon = document.getElementById('themeIcon');
-            const label = document.getElementById('themeLabel');
-            if (theme === 'light') {
-                icon.innerText = '☀️';
-                label.innerText = 'Light';
-            } else {
-                icon.innerText = '🌙';
-                label.innerText = 'Dark';
-            }
-        }
-
-        // Initialize Theme from localStorage
         (function() {
             const savedTheme = localStorage.getItem('theme') || 'dark';
             document.documentElement.setAttribute('data-theme', savedTheme);
-            updateThemeUI(savedTheme);
+            document.getElementById('themeLabel').innerText = "THEME: " + savedTheme.toUpperCase();
         })();
 
         // File Selection Handlers
@@ -1828,7 +1314,7 @@ HTML_TEMPLATE = """
             if (files && files.length > 0) {
                 selectedFile = files[0];
                 selectedSampleName = null;
-                document.getElementById('fileSelectionText').innerText = "Selected Scan: " + selectedFile.name;
+                document.getElementById('fileSelectionText').innerText = "[ SELECTED: " + selectedFile.name + " ]";
                 document.getElementById('btnRun').disabled = false;
             }
         }
@@ -1836,13 +1322,11 @@ HTML_TEMPLATE = """
         function selectSample(sampleName) {
             selectedSampleName = sampleName;
             selectedFile = null;
-            document.getElementById('fileSelectionText').innerText = "Preset: " + sampleName;
+            document.getElementById('fileSelectionText').innerText = "[ PRESET: " + sampleName + " ]";
             document.getElementById('btnRun').disabled = false;
             
-            const screeningEl = document.getElementById('screening');
-            if (screeningEl) {
-                screeningEl.scrollIntoView({ behavior: 'smooth' });
-            }
+            const el = document.getElementById('screening');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
             runScreening();
         }
 
@@ -1857,11 +1341,8 @@ HTML_TEMPLATE = """
             loader.style.display = 'block';
 
             const formData = new FormData();
-            if (selectedFile) {
-                formData.append('file', selectedFile);
-            } else if (selectedSampleName) {
-                formData.append('sample_name', selectedSampleName);
-            }
+            if (selectedFile) formData.append('file', selectedFile);
+            else if (selectedSampleName) formData.append('sample_name', selectedSampleName);
 
             fetch('/api/screen', {
                 method: 'POST',
@@ -1870,7 +1351,7 @@ HTML_TEMPLATE = """
             .then(async res => {
                 if (!res.ok) {
                     const text = await res.text();
-                    throw new Error("Pipeline Error (" + res.status + "): " + text);
+                    throw new Error("Pipeline Error: " + text);
                 }
                 return res.json();
             })
@@ -1879,40 +1360,32 @@ HTML_TEMPLATE = """
                 loader.style.display = 'none';
                 results.style.display = 'block';
 
-                // Update Severity Banner
-                const banner = document.getElementById('resBanner');
-                const title = document.getElementById('resGradeTitle');
-                const conf = document.getElementById('resConfidence');
+                document.getElementById('resGradeTitle').innerText = data.grade_name;
+                document.getElementById('resConfidence').innerText = `Confidence: ${(data.confidence * 100).toFixed(1)}% • Focus Sharpness: ${data.quality.focus_score.toFixed(1)} (τ)`;
+
                 const badge = document.getElementById('resUrgencyBadge');
-
-                title.innerText = data.grade_name;
-                conf.innerText = `Confidence Score: ${(data.confidence * 100).toFixed(1)}% • Focus Sharpness: ${data.quality.focus_score.toFixed(1)} (τ)`;
-
                 if (data.status === 'reject') {
-                    badge.innerText = "QC GATEKEEPER REJECTED";
-                    badge.style.backgroundColor = "var(--accent-rose)";
-                    badge.style.color = "#ffffff";
+                    badge.innerText = "GATEKEEPER REJECTED";
+                    badge.style.color = "var(--accent-rose)";
+                    badge.style.borderColor = "var(--accent-rose)";
                 } else if (data.referable) {
                     badge.innerText = "REFERRAL REQUIRED";
-                    badge.style.backgroundColor = data.grade_level >= 3 ? "var(--accent-rose)" : "var(--accent-amber)";
-                    badge.style.color = "#ffffff";
+                    badge.style.color = "var(--accent-gold)";
+                    badge.style.borderColor = "var(--accent-gold)";
                 } else {
                     badge.innerText = "ROUTINE / NORMAL";
-                    badge.style.backgroundColor = "var(--accent-emerald)";
-                    badge.style.color = "#ffffff";
+                    badge.style.color = "var(--accent-emerald)";
+                    badge.style.borderColor = "var(--accent-emerald)";
                 }
 
-                // Update Images
                 document.getElementById('imgOrig').src = "data:image/jpeg;base64," + data.img_orig;
                 document.getElementById('imgEnhanced').src = "data:image/jpeg;base64," + data.img_enhanced;
                 document.getElementById('imgOverlay').src = "data:image/jpeg;base64," + data.img_overlay;
                 document.getElementById('imgGradcam').src = "data:image/jpeg;base64," + data.img_gradcam;
 
-                // Setup Split Comparison Default (Raw vs Enhanced)
                 document.getElementById('splitImgBase').src = "data:image/jpeg;base64," + data.img_orig;
                 document.getElementById('splitImgOverlay').src = "data:image/jpeg;base64," + data.img_enhanced;
 
-                // Update Biomarkers
                 document.getElementById('bmMAs').innerText = data.stats.ma_count || 0;
                 document.getElementById('bmExudates').innerText = data.stats.exudate_count || 0;
                 document.getElementById('bmHems').innerText = data.stats.hem_count || 0;
@@ -1920,28 +1393,27 @@ HTML_TEMPLATE = """
                 document.getElementById('bmCorrelation').innerText = data.correlation_score.toFixed(2);
                 document.getElementById('bmNV').innerText = data.stats.nv_flag ? "YES (Active)" : "None";
 
-                // Update Rationale
                 document.getElementById('resRationaleText').innerText = data.rationale;
             })
             .catch(err => {
                 loader.style.display = 'none';
-                alert("Pipeline Execution Error: " + err.message);
+                alert("Execution Error: " + err.message);
             });
         }
 
-        // Split Comparison Slider Logic
+        // Split Comparison
         function setSplitMode(type, label) {
             if (!lastScreenData) return;
-            const baseImg = document.getElementById('splitImgBase');
-            const overlayImg = document.getElementById('splitImgOverlay');
+            const base = document.getElementById('splitImgBase');
+            const overlay = document.getElementById('splitImgOverlay');
 
-            baseImg.src = "data:image/jpeg;base64," + lastScreenData.img_orig;
-            if (type === 'enhanced') overlayImg.src = "data:image/jpeg;base64," + lastScreenData.img_enhanced;
-            else if (type === 'overlay') overlayImg.src = "data:image/jpeg;base64," + lastScreenData.img_overlay;
-            else if (type === 'gradcam') overlayImg.src = "data:image/jpeg;base64," + lastScreenData.img_gradcam;
-            else overlayImg.src = "data:image/jpeg;base64," + lastScreenData.img_enhanced;
+            base.src = "data:image/jpeg;base64," + lastScreenData.img_orig;
+            if (type === 'enhanced') overlay.src = "data:image/jpeg;base64," + lastScreenData.img_enhanced;
+            else if (type === 'overlay') overlay.src = "data:image/jpeg;base64," + lastScreenData.img_overlay;
+            else if (type === 'gradcam') overlay.src = "data:image/jpeg;base64," + lastScreenData.img_gradcam;
+            else overlay.src = "data:image/jpeg;base64," + lastScreenData.img_enhanced;
 
-            showToast("Comparison Mode: Raw Fundus vs " + label);
+            showToast("Comparison Mode: Raw vs " + label);
         }
 
         const splitSlider = document.getElementById('splitSlider');
@@ -1965,55 +1437,18 @@ HTML_TEMPLATE = """
         window.addEventListener('touchend', () => { isDragging = false; });
         window.addEventListener('touchmove', (e) => { if (isDragging) setSplitPos(e.touches[0].clientX); });
 
-        // 3D Depth Layer Activation
-        function activateLayer(layerType, btn) {
-            document.querySelectorAll('.depth-pill').forEach(p => p.classList.remove('active'));
-            btn.classList.add('active');
-
-            const base = document.getElementById('layerBase');
-            const vessels = document.getElementById('layerVessels');
-            const lesions = document.getElementById('layerLesions');
-            const gradcam = document.getElementById('layerGradcam');
-
-            if (layerType === 'base') {
-                base.style.transform = "translateZ(60px) rotateX(15deg) scale(1.05)";
-                vessels.style.transform = "translateZ(20px) rotateX(15deg) opacity(0.4)";
-                lesions.style.transform = "translateZ(0px) rotateX(15deg) opacity(0.3)";
-                gradcam.style.transform = "translateZ(-20px) rotateX(15deg) opacity(0.2)";
-            } else if (layerType === 'vessels') {
-                base.style.transform = "translateZ(0px) rotateX(15deg)";
-                vessels.style.transform = "translateZ(80px) rotateX(15deg) scale(1.08)";
-                lesions.style.transform = "translateZ(40px) rotateX(15deg)";
-                gradcam.style.transform = "translateZ(20px) rotateX(15deg)";
-            } else if (layerType === 'lesions') {
-                base.style.transform = "translateZ(-20px) rotateX(15deg)";
-                vessels.style.transform = "translateZ(20px) rotateX(15deg)";
-                lesions.style.transform = "translateZ(90px) rotateX(15deg) scale(1.1)";
-                gradcam.style.transform = "translateZ(40px) rotateX(15deg)";
-            } else if (layerType === 'gradcam') {
-                base.style.transform = "translateZ(-40px) rotateX(15deg)";
-                vessels.style.transform = "translateZ(0px) rotateX(15deg)";
-                lesions.style.transform = "translateZ(40px) rotateX(15deg)";
-                gradcam.style.transform = "translateZ(110px) rotateX(15deg) scale(1.12)";
-            }
-        }
-
-        // Pitch Modal Logic
+        // Pitch Modal
         function openPitchModal(slideIdx=0) {
             document.getElementById('pitchModal').style.display = 'flex';
-            const tabs = document.querySelectorAll('.pitch-tab-btn');
-            if (tabs[slideIdx]) switchPitchSlide(slideIdx, tabs[slideIdx]);
         }
 
-        function closePitchModal(e) {
+        function closePitchModal() {
             document.getElementById('pitchModal').style.display = 'none';
         }
 
         function switchPitchSlide(idx, btn) {
-            document.querySelectorAll('.pitch-tab-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            document.querySelectorAll('.slide-content-pane').forEach((p, i) => {
-                p.classList.toggle('active', i === idx);
+            document.querySelectorAll('.slide-pane').forEach((p, i) => {
+                p.style.display = (i === idx) ? 'block' : 'none';
             });
         }
 
@@ -2023,14 +1458,14 @@ HTML_TEMPLATE = """
             const doctors = parseInt(document.getElementById('sliderDoctors').value);
             const bw = parseFloat(document.getElementById('sliderBandwidth').value);
 
-            document.getElementById('lblClinics').innerText = clinics + " Clinics";
-            document.getElementById('lblDoctors').innerText = doctors + " Doctors";
-            document.getElementById('lblBandwidth').innerText = bw.toFixed(1) + " Mbps";
+            document.getElementById('lblClinics').innerText = clinics + " CLINICS";
+            document.getElementById('lblDoctors').innerText = doctors + " DOCTORS";
+            document.getElementById('lblBandwidth').innerText = bw.toFixed(1) + " MBPS";
 
             const annualCap = clinics * 15 * 365;
             document.getElementById('simCapacity').innerText = annualCap.toLocaleString();
 
-            const uploadDelay = (0.4 / (bw / 8.0)).toFixed(1); // 400 KB WebP payload
+            const uploadDelay = (0.4 / (bw / 8.0)).toFixed(1);
             document.getElementById('simUploadDelay').innerText = uploadDelay + "s";
 
             const referablePerDay = clinics * 15 * 0.4;
@@ -2042,7 +1477,6 @@ HTML_TEMPLATE = """
             document.getElementById('simWaitTime').innerText = avgWait + " min";
         }
 
-        // Toast
         function showToast(msg) {
             const toast = document.getElementById('toast');
             toast.innerText = msg;
