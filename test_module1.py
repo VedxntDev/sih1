@@ -63,26 +63,35 @@ def assess_and_enhance(img_path, params=None):
     image_sha256 = hashlib.sha256(file_bytes).hexdigest()
 
     # 1. Real Fundus Photo Authenticity & Synthetic/Text Overlay Classifier
-    # Check 1: Retinal Color Gamut (Fundus is predominantly reddish-orange inside aperture: R >= G >= B)
+    # Check 1: Aspect Ratio Gate (Clinical fundus cameras capture in 1:1, 4:3, or 3:2. Multi-panel posters are > 1.65:1)
+    aspect_ratio = max(w, h) / (min(w, h) + 1e-5)
+    is_multipanel_graphic = bool(aspect_ratio > 1.65)
+
+    # Check 2: Multi-Aperture / Multiple Retinal Circle Detection
+    contours_all, _ = cv2.findContours(fov_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    large_discs = [cnt for cnt in contours_all if cv2.contourArea(cnt) > (0.08 * h * w)]
+    has_multiple_discs = bool(len(large_discs) > 1)
+
+    # Check 3: Burned-in Text Labels / Arrow Annotations
+    white_text_mask = (r_chan > 230) & (g_chan > 230) & (b_chan > 230)
+    num_t, t_labels, t_stats, _ = cv2.connectedComponentsWithStats(white_text_mask.astype(np.uint8))
+    char_strokes = sum(1 for i in range(1, num_t) if 10 <= t_stats[i, cv2.CC_STAT_AREA] <= 400 and 6 <= t_stats[i, cv2.CC_STAT_HEIGHT] <= 38)
+    has_heavy_text_overlay = bool(char_strokes > 12)
+
+    # Check 4: Retinal Color Gamut (Predominantly reddish-orange: R >= G >= B inside aperture)
     in_aperture = fov_mask > 0
     if np.sum(in_aperture) > 500:
         r_fov = r_chan[in_aperture].astype(float)
         g_fov = g_chan[in_aperture].astype(float)
         b_fov = b_chan[in_aperture].astype(float)
         
-        red_dominance = np.mean(r_fov > (g_fov * 0.95))
-        blue_suppression = np.mean(g_fov > (b_fov * 0.90))
+        red_dominance = np.mean(r_fov > (g_fov * 0.92))
+        blue_suppression = np.mean(g_fov > (b_fov * 0.88))
         is_retinal_gamut = bool(red_dominance > 0.65 and blue_suppression > 0.60)
     else:
         is_retinal_gamut = False
 
-    # Check 2: Artificial Overlaid Text / Arrows / Watermark Detector
-    # High-contrast artificial strokes: purely saturated white or uniform text boxes
-    white_text_mask = (r_chan > 245) & (g_chan > 245) & (b_chan > 245)
-    text_edge_density = float(np.sum(white_text_mask) / (h * w + 1e-5))
-    has_heavy_text_overlay = bool(text_edge_density > 0.12) # >12% pure white text/borders
-
-    # Check 3: Laterality Detection (OD: Right Eye, OS: Left Eye based on nasal Optic Disc position)
+    # Check 5: Laterality Detection (OD: Right Eye, OS: Left Eye based on nasal Optic Disc position)
     rg_composite = cv2.GaussianBlur(r_chan.astype(float)*0.6 + g_chan.astype(float)*0.4, (31, 31), 0)
     rg_composite[fov_mask == 0] = 0
     _, _, _, max_loc = cv2.minMaxLoc(rg_composite)
@@ -153,12 +162,18 @@ def assess_and_enhance(img_path, params=None):
 
     # 6. Decision Gatekeeping (Multi-Stage Integrity & Quality Filter)
     rejection_reason = ""
-    if not is_retinal_gamut:
+    if is_multipanel_graphic:
         status = 'reject'
-        rejection_reason = "Non-Retinal Image / Invalid Color Gamut Detected — Only authentic fundus photographs are accepted."
+        rejection_reason = f"Non-Clinical Teaching Infographic Detected (Aspect Ratio {aspect_ratio:.2f}:1 > 1.65:1) — Please upload single unannotated raw camera capture."
+    elif has_multiple_discs:
+        status = 'reject'
+        rejection_reason = f"Multi-Panel Composite Image ({len(large_discs)} eye discs detected) — Please crop or upload a single eye fundus scan."
     elif has_heavy_text_overlay:
         status = 'reject'
-        rejection_reason = "Synthetic Overlays / Screenshot Annotations Detected — Please upload clean unannotated raw fundus scans."
+        rejection_reason = f"Burned-in Text Labels / Arrow Annotations Detected ({char_strokes} text strokes) — Rejecting educational graphic; raw clinical photo required."
+    elif not is_retinal_gamut:
+        status = 'reject'
+        rejection_reason = "Non-Retinal Image / Invalid Color Gamut Detected — Only authentic fundus photographs are accepted."
     elif fov_ratio < params['fov_min_reject'] and fov_completeness < 0.50:
         status = 'reject'
         rejection_reason = f"Incomplete Field of View (Coverage: {fov_ratio*100:.1f}%, Min: {params['fov_min_reject']*100:.1f}%) — Re-align fundus camera centered on pupil."

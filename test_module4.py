@@ -67,19 +67,20 @@ def explain_prediction(img, severity_level, referable_flag, confidence, lesion_s
 
     correlation_score = float(0.5 * spatial_iou + 0.5 * max(0.0, p_corr))
 
-    # 3. Enforced XAI Gating Rule (IoU Threshold: >= 0.38)
-    iou_threshold = 0.38
-    is_xai_gated = bool(correlation_score < iou_threshold and has_lesions and severity_level >= 2)
+    # 3. Enforced XAI Gating Rule (IoU Threshold: >= 0.45, Pearson: >= 0.50)
+    iou_threshold = 0.45
+    pearson_threshold = 0.50
+    is_xai_gated = bool((spatial_iou < iou_threshold or p_corr < pearson_threshold) and has_lesions and severity_level >= 2)
     
     # Joint Calibrated Clinical Confidence
     if is_xai_gated:
-        calibrated_confidence = float(confidence * (0.60 + 0.40 * (correlation_score / iou_threshold)))
+        calibrated_confidence = float(confidence * (0.60 + 0.40 * min(1.0, spatial_iou / iou_threshold)))
         referral_text = "PROVISIONAL / LOW XAI AGREEMENT (ROUTE TO MANUAL TELE-OPHTHALMOLOGY REVIEW)"
-        gating_memo = f"\n⚠️ [XAI CO-LOCALIZATION ALERT]: Spatial IoU ({spatial_iou:.2f}) / Pearson Correlation ({p_corr:.2f}) did not reach verification benchmark (τ >= {iou_threshold:.2f}). Confidence downgraded from {confidence*100:.1f}% to {calibrated_confidence*100:.1f}%."
+        gating_memo = f"\n⚠️ [XAI CO-LOCALIZATION ALERT]: Spatial IoU ({spatial_iou:.2f} < {iou_threshold:.2f}) or Pearson Correlation ({p_corr:.2f} < {pearson_threshold:.2f}) did not reach verification benchmark. Confidence downgraded from {confidence*100:.1f}% to {calibrated_confidence*100:.1f}%. Routed to Physician Adjudication Queue."
     else:
         calibrated_confidence = float(confidence)
         referral_text = "REFERRAL REQUIRED (Grade 2+ Threshold Exceeded)" if referable_flag else "NO REFERRAL NEEDED (Routine Follow-up)"
-        gating_memo = f"\n✅ [XAI VERIFICATION PASSED]: Spatial correlation ({correlation_score:.2f} >= {iou_threshold:.2f}) confirms high spatial agreement with segmented lesions."
+        gating_memo = f"\n✅ [XAI VERIFICATION PASSED]: Spatial IoU ({spatial_iou:.2f} >= {iou_threshold:.2f}) and Pearson correlation ({p_corr:.2f} >= {pearson_threshold:.2f}) confirm high spatial alignment with segmented lesions."
 
     level_names = ['No DR (Level 0)', 'Mild DR (Level 1)', 'Moderate DR (Level 2)', 'Severe DR (Level 3)', 'Proliferative DR (Level 4)']
     
@@ -90,7 +91,7 @@ def explain_prediction(img, severity_level, referable_flag, confidence, lesion_s
         f"• Clinical Decision: {referral_text}",
         f"• Lesion Biomarkers: MAs: {lesion_stats.get('ma_count', 0)}, Exudates: {lesion_stats.get('exudate_count', 0)} ({lesion_stats.get('exudate_area', 0.0):.0f} px), Hemorrhages: {lesion_stats.get('hem_count', 0)} ({lesion_stats.get('hem_area', 0.0):.0f} px).",
         f"• Neovascularization: {'PRESENT (Grade 4 Marker)' if lesion_stats.get('nv_flag', False) else 'Absent'}",
-        f"• Grad-CAM Spatial IoU: {spatial_iou:.2f} | Pearson Correlation: {p_corr:.2f} (Composite: {correlation_score:.2f})",
+        f"• Grad-CAM Spatial IoU: {spatial_iou:.2f} (Benchmark: >= {iou_threshold:.2f}) | Pearson Correlation: {p_corr:.2f} (Benchmark: >= {pearson_threshold:.2f})",
         gating_memo
     ]
     rationale_text = "\n".join(report_lines)
@@ -103,6 +104,8 @@ def explain_prediction(img, severity_level, referable_flag, confidence, lesion_s
         'spatial_iou': spatial_iou,
         'pearson_corr': p_corr,
         'correlation_score': correlation_score,
+        'iou_threshold': iou_threshold,
+        'pearson_threshold': pearson_threshold,
         'is_xai_gated': is_xai_gated,
         'rationale_text': rationale_text
     }
