@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-SIH 2026 Explainable AI Diabetic Retinopathy Screening — Web Application Server
+Explainable AI Diabetic Retinopathy Screening — Web Application Server
 Provides a complete web interface for users to upload fundus images, execute Modules 1-5,
 and inspect visual overlays, Grad-CAM heatmaps, severity scores, and clinical reports.
 """
@@ -54,7 +54,7 @@ HTML_TEMPLATE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Explainable AI for Diabetic Retinopathy Screening (SIH 2026)</title>
+    <title>Retinal Health Screening Assistant</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -72,13 +72,49 @@ HTML_TEMPLATE = """
         body { margin: 0; padding: 0; background-color: var(--bg); color: var(--text); }
         header {
             background: linear-gradient(135deg, #1b365d, #2980b9);
-            color: white; padding: 20px 40px;
+            color: white; padding: 18px 40px;
             display: flex; justify-content: space-between; align-items: center;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
-        header h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
-        header p { margin: 4px 0 0 0; opacity: 0.85; font-size: 13px; }
-        .badge-sih { background: #f39c12; color: #fff; padding: 5px 12px; border-radius: 20px; font-weight: 700; font-size: 12px; }
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .brand-icon {
+            font-size: 26px;
+            background: rgba(255, 255, 255, 0.15);
+            width: 46px;
+            height: 46px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            backdrop-filter: blur(4px);
+        }
+        header h1 { margin: 0; font-size: 21px; font-weight: 700; letter-spacing: -0.3px; }
+        header p { margin: 4px 0 0 0; opacity: 0.9; font-size: 13px; font-weight: 400; }
+        .header-status {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(6px);
+            color: #ffffff;
+            padding: 7px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+        }
+        .status-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background-color: #2ecc71;
+            display: inline-block;
+            box-shadow: 0 0 8px #2ecc71;
+        }
         
         .container { display: grid; grid-template-columns: 340px 1fr; gap: 25px; max-width: 1400px; margin: 30px auto; padding: 0 25px; }
         
@@ -141,11 +177,17 @@ HTML_TEMPLATE = """
 </head>
 <body>
     <header>
-        <div>
-            <h1>Explainable AI for Diabetic Retinopathy Screening</h1>
-            <p>Integrated MATLAB/Python Tele-Ophthalmology Prototype (Modules 1 to 5)</p>
+        <div class="header-brand">
+            <div class="brand-icon">👁️</div>
+            <div>
+                <h1>Retinal Health Screening Assistant</h1>
+                <p>Intelligent, explainable eye care analysis supporting clinicians in early detection</p>
+            </div>
         </div>
-        <span class="badge-sih">SIH 2026 | PS ID 26038</span>
+        <div class="header-status">
+            <span class="status-dot"></span>
+            <span>Clinical Assistant Ready</span>
+        </div>
     </header>
 
     <div class="container">
@@ -416,5 +458,5 @@ def api_screen():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    print("Starting SIH 2026 DR Screening Web Server on http://localhost:5050")
+    print("Starting DR Screening Web Server on http://localhost:5050")
     app.run(host='0.0.0.0', port=5050, debug=False)
