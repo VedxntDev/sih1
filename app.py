@@ -20,8 +20,12 @@ from test_module5 import simulate_telemedicine_queue
 
 app = Flask(__name__)
 
-UPLOAD_FOLDER = '/tmp/uploads'
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
+try:
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+except Exception:
+    UPLOAD_FOLDER = '/tmp/uploads'
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 def sanitize_for_json(obj):
     """Recursively converts NumPy datatypes (int64, float64, bool_) to native Python types."""
@@ -360,7 +364,8 @@ def api_screen():
             img_path = os.path.join(UPLOAD_FOLDER, file.filename)
             file.save(img_path)
         elif sample_name:
-            img_path = os.path.join('data/sample_images', sample_name)
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+            img_path = os.path.join(base_dir, 'data', 'sample_images', os.path.basename(sample_name))
 
         if not img_path or not os.path.exists(img_path):
             return jsonify({'error': 'No image provided or file not found'}), 400

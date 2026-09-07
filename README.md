@@ -36,8 +36,8 @@ An automated, explainable, 5-module Diabetic Retinopathy (DR) screening ecosyste
 
 ### 1. Web Application Interface
 ```bash
-cd dr_screening_sih2026
-.venv/bin/python app.py
+# Run locally on Windows / Linux
+python app.py
 ```
 Open **http://localhost:5050** in your web browser to upload images and view real-time diagnostics.
 

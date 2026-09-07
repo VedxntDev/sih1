@@ -5,4 +5,5 @@ __pycache__/
 data/uploads/*
 !data/uploads/.gitkeep
 tmp/
+uploads/
 *.log
