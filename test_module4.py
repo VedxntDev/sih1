@@ -78,13 +78,18 @@ def explain_prediction(img, severity_level, referable_flag, confidence, lesion_s
     
     # 4. Transparent & Auditable Confidence Downgrade Logic
     raw_confidence = float(confidence)
-    downgrade_rule_version = "XAI-GATE-v2.4"
-    downgrade_penalty_formula = f"conf × (0.60 + 0.40 × min(1.0, IoU / {iou_threshold:.2f}))"
+    downgrade_rule_version = "XAI-GATE-v2.5"
     
     if is_xai_gated:
+        penalty_terms = []
         iou_penalty_factor = 0.60 + 0.40 * min(1.0, spatial_iou / iou_threshold)
+        penalty_terms.append(f"(0.60 + 0.40 × min(1.0, IoU / {iou_threshold:.2f}))")
+        
         if is_outlier:
             iou_penalty_factor *= 0.85
+            penalty_terms.append("0.85 [Outlier Penalty]")
+            
+        downgrade_penalty_formula = f"conf × {' × '.join(penalty_terms)}"
         calibrated_confidence = float(raw_confidence * iou_penalty_factor)
         
         # Build strictly conditional alert message
@@ -108,6 +113,7 @@ def explain_prediction(img, severity_level, referable_flag, confidence, lesion_s
         gating_memo += f"\n   • Confidence Downgrade: {raw_confidence*100:.1f}% → {calibrated_confidence*100:.1f}% via [{downgrade_penalty_formula}]."
         gating_memo += f"\n   • Adjudication Action: Case flagged for mandatory physician review before clinical sign-off."
     else:
+        downgrade_penalty_formula = "None (Verification Passed)"
         calibrated_confidence = float(raw_confidence)
         gating_memo = f"\n✅ [XAI VERIFICATION PASSED]: Spatial IoU ({spatial_iou:.2f} >= {iou_threshold:.2f}) and Pearson correlation ({p_corr:.2f} >= {pearson_threshold:.2f}) confirm high spatial alignment with segmented lesions."
 

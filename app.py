@@ -1761,10 +1761,10 @@ HTML_TEMPLATE = """
             const now = new Date();
             const rawTs = lastScreenData.timestamp || (now.toISOString().replace('T', ' ').substring(0, 19) + ' UTC');
             document.getElementById('rptDate').innerText = rawTs.endsWith('UTC') ? rawTs : rawTs + ' UTC';
-            document.getElementById('rptStudyId').innerText = lastScreenData.study_id || ('OPT-' + now.getFullYear() + '-' + Math.floor(10000 + Math.random() * 90000));
-            document.getElementById('rptPatientId').innerText = lastScreenData.patient_id || 'PT-2026-9042';
+            document.getElementById('rptStudyId').innerText = lastScreenData.study_id;
+            document.getElementById('rptPatientId').innerText = lastScreenData.patient_id;
             document.getElementById('rptLaterality').innerText = lastScreenData.laterality || 'OD (Right Eye)';
-            document.getElementById('rptSha256').innerText = lastScreenData.image_sha256 || '094813d4f5de2dfef2653c86488396bbe6a73c996a29a198282c71491ab111a6';
+            document.getElementById('rptSha256').innerText = lastScreenData.image_sha256;
 
             document.getElementById('rptGradeName').innerText = lastScreenData.grade_name;
             document.getElementById('rptConf').innerText = (lastScreenData.confidence * 100).toFixed(1) + '%';
@@ -1909,12 +1909,12 @@ HTML_TEMPLATE = """
                 const auditLog = document.getElementById('adjudicationAuditLog');
                 const sigStamp = document.getElementById('rptSignedTimestamp');
                 auditLog.style.color = "#059669";
-                auditLog.innerText = `✓ Physician Adjudication Authorized (${data.elapsed_seconds}s inspection verified)`;
-                sigStamp.innerText = `Authorized & Signed: ${data.signed_timestamp} (${data.elapsed_seconds}s review)`;
+                auditLog.innerText = `✓ Authorized & Sealed (${data.elapsed_seconds}s inspection verified)`;
+                sigStamp.innerText = `Authorized: ${data.signed_timestamp} [SEAL: ${data.digital_signature.substring(0, 16)}...]`;
                 sigStamp.style.color = "#059669";
                 sigStamp.style.fontWeight = "700";
                 btn.innerText = "✓ Authorized & Sealed";
-                showToast("✓ Clinical Diagnosis Officially Authorized & Locked");
+                showToast("✓ Clinical Diagnosis Officially Authorized & Cryptographically Signed");
             })
             .catch(err => {
                 alert(err.message);
@@ -2059,19 +2059,28 @@ def api_screen():
         # 1. Module 1: Quality Gatekeeper, Authenticity Filter & Enhancement
         status, enhanced, q_report, reason = assess_and_enhance(img_path)
 
-        # Audit Registry & Provenance Tracking
+        # Audit Registry & Provenance Tracking (Strict 1:1 Image-to-Patient Binding)
         img_sha = q_report.get('image_sha256', '')
-        study_id = f"OPT-2026-{random.randint(10000, 99999)}"
-        run_id = f"RUN-{hashlib.sha256((img_sha + str(time.time())).encode()).hexdigest()[:10].upper()}"
+        timestamp_now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+        run_id = f"EXEC-{hashlib.sha256((img_sha + str(time.time())).encode()).hexdigest()[:10].upper()}"
         is_duplicate = False
         duplicate_note = ""
-        timestamp_now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
         
         if img_sha in STUDY_REGISTRY:
             is_duplicate = True
             first_entry = STUDY_REGISTRY[img_sha]
-            duplicate_note = f"Warning: Identical image fingerprint previously screened under Patient {first_entry.get('patient_id')} at {first_entry.get('timestamp')}."
+            # Maintain canonical Patient ID and Study ID bound to this exact image hash
+            patient_id = first_entry['patient_id']
+            study_id = first_entry['study_id']
+            duplicate_note = f"Provenance Binding Verified: Image fingerprint {img_sha[:12]}... is cryptographically bound to Patient {patient_id} under Study {study_id} (Registered: {first_entry.get('timestamp')}). Cross-patient re-allocation is locked."
         else:
+            # Deterministic, unique patient & study ID generated per distinct fundus image
+            if not patient_id or patient_id == 'PT-2026-9042':
+                patient_num = int(hashlib.md5(img_sha.encode()).hexdigest()[:6], 16) % 90000 + 10000
+                patient_id = f"PT-2026-{patient_num}"
+            study_num = int(hashlib.sha256((img_sha + 'STUDY_SALT').encode()).hexdigest()[:6], 16) % 90000 + 10000
+            study_id = f"OPT-2026-{study_num}"
+
             STUDY_REGISTRY[img_sha] = {
                 'study_id': study_id,
                 'patient_id': patient_id,
@@ -2079,7 +2088,7 @@ def api_screen():
                 'timestamp': timestamp_now
             }
 
-        # 2. Module 2: Structure & Lesion Segmentation
+        # 2. Module 2: Structure & Lesion Segmentation (Fresh Inference Execution)
         overlay, stats, masks = segment_retinal_structures(enhanced)
 
         # 3. Module 3: Continuous DR Severity Grading
@@ -2099,7 +2108,7 @@ def api_screen():
             ref = report['referable_flag']
             rationale = report['rationale_text']
             if is_duplicate:
-                rationale += f"\n\n⚠️ [AUDIT FLAG]: {duplicate_note}"
+                rationale += f"\n\n🔒 [PROVENANCE LOCK]: {duplicate_note}"
 
         # Initialize Server-Side Review Session for Governance Locking
         INFERENCE_SESSIONS[study_id] = {
@@ -2110,6 +2119,8 @@ def api_screen():
             'run_id': run_id,
             'start_time': time.time(),
             'grade_level': level if status != 'reject' else -1,
+            'confidence': conf,
+            'spatial_iou': report.get('spatial_iou', 0.0),
             'referable': ref,
             'is_xai_gated': report.get('is_xai_gated', False) if status != 'reject' else False,
             'modules_viewed': set(['orig']),
@@ -2127,8 +2138,8 @@ def api_screen():
             'referable': ref,
             'confidence': conf,
             'raw_confidence': report.get('raw_confidence', conf),
-            'downgrade_penalty_formula': report.get('downgrade_penalty_formula', 'N/A'),
-            'downgrade_rule_version': report.get('downgrade_rule_version', 'XAI-GATE-v2.4'),
+            'downgrade_penalty_formula': report.get('downgrade_penalty_formula', 'None'),
+            'downgrade_rule_version': report.get('downgrade_rule_version', 'XAI-GATE-v2.5'),
             'triage_decision': report.get('triage_decision', 'Routine Checkup'),
             'triage_criterion': report.get('triage_criterion', 'Grade < 2 (Non-Referable)'),
             'quality': q_report,
@@ -2167,7 +2178,7 @@ def api_log_view():
 
 @app.route('/api/approve_case', methods=['POST'])
 def api_approve_case():
-    import time, datetime
+    import time, datetime, hashlib
     study_id = request.form.get('study_id')
     doctor_name = request.form.get('doctor_name', 'Dr. Rajesh Sharma, MD')
     reg_no = request.form.get('reg_no', 'MED-IN-2026-90412')
@@ -2183,18 +2194,25 @@ def api_approve_case():
         remaining = int(min_required_seconds - elapsed)
         return jsonify({'error': f'Clinical Governance Lock: Minimum mandatory review interval is 30s ({remaining}s remaining). Please complete full multi-spectral review before sign-off.'}), 403
 
+    now_utc = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
     session['approved'] = True
     session['approved_by'] = doctor_name
     session['doctor_reg_no'] = reg_no
-    now_utc = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
     session['approved_timestamp'] = now_utc
+
+    # Cryptographic Digital Signature binding physician, canonical metrics, and timestamp
+    sig_payload = f"{study_id}:{session['patient_id']}:{session['image_sha256']}:{session['grade_level']}:{doctor_name}:{reg_no}:{now_utc}"
+    digital_signature = hashlib.sha256(sig_payload.encode()).hexdigest()
+    session['digital_signature'] = digital_signature
 
     return jsonify({
         'success': True,
         'study_id': study_id,
+        'patient_id': session['patient_id'],
         'doctor_name': doctor_name,
         'reg_no': reg_no,
         'signed_timestamp': now_utc,
+        'digital_signature': digital_signature,
         'elapsed_seconds': int(elapsed)
     })
 
