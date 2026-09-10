@@ -70,25 +70,76 @@ def explain_prediction(img, severity_level, referable_flag, confidence, lesion_s
     # 3. Enforced XAI Gating Rule (IoU Threshold: >= 0.45, Pearson: >= 0.50)
     iou_threshold = 0.45
     pearson_threshold = 0.50
-    is_xai_gated = bool((spatial_iou < iou_threshold or p_corr < pearson_threshold) and has_lesions and severity_level >= 2)
+    iou_failed = bool(spatial_iou < iou_threshold)
+    pearson_failed = bool(p_corr < pearson_threshold)
+    is_outlier = bool(lesion_stats.get('is_outlier', False))
+
+    is_xai_gated = bool((iou_failed or pearson_failed or is_outlier) and has_lesions and severity_level >= 2)
     
-    # Joint Calibrated Clinical Confidence
+    # 4. Transparent & Auditable Confidence Downgrade Logic
+    raw_confidence = float(confidence)
+    downgrade_rule_version = "XAI-GATE-v2.4"
+    downgrade_penalty_formula = f"conf × (0.60 + 0.40 × min(1.0, IoU / {iou_threshold:.2f}))"
+    
     if is_xai_gated:
-        calibrated_confidence = float(confidence * (0.60 + 0.40 * min(1.0, spatial_iou / iou_threshold)))
-        referral_text = "PROVISIONAL / LOW XAI AGREEMENT (ROUTE TO MANUAL TELE-OPHTHALMOLOGY REVIEW)"
-        gating_memo = f"\n⚠️ [XAI CO-LOCALIZATION ALERT]: Spatial IoU ({spatial_iou:.2f} < {iou_threshold:.2f}) or Pearson Correlation ({p_corr:.2f} < {pearson_threshold:.2f}) did not reach verification benchmark. Confidence downgraded from {confidence*100:.1f}% to {calibrated_confidence*100:.1f}%. Routed to Physician Adjudication Queue."
+        iou_penalty_factor = 0.60 + 0.40 * min(1.0, spatial_iou / iou_threshold)
+        if is_outlier:
+            iou_penalty_factor *= 0.85
+        calibrated_confidence = float(raw_confidence * iou_penalty_factor)
+        
+        # Build strictly conditional alert message
+        failed_items = []
+        if iou_failed:
+            failed_items.append(f"Spatial IoU ({spatial_iou:.2f} < {iou_threshold:.2f})")
+        if pearson_failed:
+            failed_items.append(f"Pearson Correlation ({p_corr:.2f} < {pearson_threshold:.2f})")
+        if is_outlier:
+            failed_items.append("Lesion Count Outlier Threshold (>99.5th percentile)")
+
+        passed_items = []
+        if not iou_failed:
+            passed_items.append(f"Spatial IoU ({spatial_iou:.2f} >= {iou_threshold:.2f})")
+        if not pearson_failed:
+            passed_items.append(f"Pearson Correlation ({p_corr:.2f} >= {pearson_threshold:.2f})")
+
+        gating_memo = f"\n⚠️ [XAI CO-LOCALIZATION ALERT]: {' and '.join(failed_items)} did not reach verification benchmark."
+        if passed_items:
+            gating_memo += f" [PASSED: {' and '.join(passed_items)}]."
+        gating_memo += f"\n   • Confidence Downgrade: {raw_confidence*100:.1f}% → {calibrated_confidence*100:.1f}% via [{downgrade_penalty_formula}]."
+        gating_memo += f"\n   • Adjudication Action: Case flagged for mandatory physician review before clinical sign-off."
     else:
-        calibrated_confidence = float(confidence)
-        referral_text = "REFERRAL REQUIRED (Grade 2+ Threshold Exceeded)" if referable_flag else "NO REFERRAL NEEDED (Routine Follow-up)"
+        calibrated_confidence = float(raw_confidence)
         gating_memo = f"\n✅ [XAI VERIFICATION PASSED]: Spatial IoU ({spatial_iou:.2f} >= {iou_threshold:.2f}) and Pearson correlation ({p_corr:.2f} >= {pearson_threshold:.2f}) confirm high spatial alignment with segmented lesions."
 
+    # 5. Programmatic ICDR Triage Mapping
     level_names = ['No DR (Level 0)', 'Mild DR (Level 1)', 'Moderate DR (Level 2)', 'Severe DR (Level 3)', 'Proliferative DR (Level 4)']
+    triage_decisions = [
+        "NO REFERRAL NEEDED (Routine 24M Follow-up)",
+        "NO REFERRAL NEEDED (Annual 12M Monitoring)",
+        "REFERRAL REQUIRED (6M Tele-Ophthalmology Queue)",
+        "HIGH-RISK REFERRAL REQUIRED (3M Specialist Review)",
+        "URGENT REFERRAL REQUIRED (Immediate Laser / PRP / Anti-VEGF <2W)"
+    ]
+    triage_criteria = [
+        "Grade < 2 (Non-Referable)",
+        "Grade < 2 (Non-Referable)",
+        "Grade ≥ 2 (Referable)",
+        "Grade ≥ 3 (High-Risk Referable)",
+        "Grade 4 / NV-Positive (Urgent Referable)"
+    ]
     
+    referral_text = triage_decisions[severity_level]
+    triage_criterion_text = triage_criteria[severity_level]
+
+    # Clinical referability rule: Levels 2, 3, 4 are strictly referable
+    final_referable = bool(severity_level >= 2 or referable_flag or lesion_stats.get('nv_flag', False))
+
     report_lines = [
         f"PATIENT CLINICAL DIAGNOSTIC REPORT",
         f"----------------------------------------",
         f"• Severity Grade: {level_names[severity_level]} (Calibrated Confidence: {calibrated_confidence*100:.1f}%)",
         f"• Clinical Decision: {referral_text}",
+        f"• Triage Criteria: {triage_criterion_text}",
         f"• Lesion Biomarkers: MAs: {lesion_stats.get('ma_count', 0)}, Exudates: {lesion_stats.get('exudate_count', 0)} ({lesion_stats.get('exudate_area', 0.0):.0f} px), Hemorrhages: {lesion_stats.get('hem_count', 0)} ({lesion_stats.get('hem_area', 0.0):.0f} px).",
         f"• Neovascularization: {'PRESENT (Grade 4 Marker)' if lesion_stats.get('nv_flag', False) else 'Absent'}",
         f"• Grad-CAM Spatial IoU: {spatial_iou:.2f} (Benchmark: >= {iou_threshold:.2f}) | Pearson Correlation: {p_corr:.2f} (Benchmark: >= {pearson_threshold:.2f})",
@@ -99,14 +150,21 @@ def explain_prediction(img, severity_level, referable_flag, confidence, lesion_s
     report = {
         'severity_level': severity_level,
         'severity_name': level_names[severity_level],
-        'referable_flag': referable_flag,
+        'referable_flag': final_referable,
         'confidence': calibrated_confidence,
+        'raw_confidence': raw_confidence,
         'spatial_iou': spatial_iou,
         'pearson_corr': p_corr,
         'correlation_score': correlation_score,
         'iou_threshold': iou_threshold,
         'pearson_threshold': pearson_threshold,
+        'iou_passed': not iou_failed,
+        'pearson_passed': not pearson_failed,
         'is_xai_gated': is_xai_gated,
+        'downgrade_rule_version': downgrade_rule_version,
+        'downgrade_penalty_formula': downgrade_penalty_formula,
+        'triage_decision': referral_text,
+        'triage_criterion': triage_criterion_text,
         'rationale_text': rationale_text
     }
 

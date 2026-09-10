@@ -1505,9 +1505,9 @@ HTML_TEMPLATE = """
                     <div>
                         <div style="font-weight:700; margin-bottom:4px;">PHYSICIAN ADJUDICATION & GOVERNANCE:</div>
                         <div style="display:flex; flex-direction:column; gap:4px; color:#374151;">
-                            <label><input type="checkbox" id="chkStage1" onchange="checkAdjudicationReadiness()"> [X] Stage 1 & 2: Raw / CLAHE Illumination Verified</label>
-                            <label><input type="checkbox" id="chkStage2" onchange="checkAdjudicationReadiness()"> [X] Stage 3: Anatomical OD, Fovea & Biomarker Segmentations Validated</label>
-                            <label><input type="checkbox" id="chkStage3" onchange="checkAdjudicationReadiness()"> [X] Stage 4: Grad-CAM Activation Co-localization (IoU &ge; 0.45) Confirmed</label>
+                            <label><input type="checkbox" id="chkStage1" onchange="checkAdjudicationReadiness()"> Stage 1 & 2: Focus & CLAHE Illumination Verified</label>
+                            <label><input type="checkbox" id="chkStage2" onchange="checkAdjudicationReadiness()"> Stage 3: Anatomical OD, Fovea & Biomarker Segmentations Validated</label>
+                            <label><input type="checkbox" id="chkStage3" onchange="checkAdjudicationReadiness()"> Stage 4: Grad-CAM Activation Co-localization (IoU &ge; 0.45, Pearson &ge; 0.50) Confirmed</label>
                         </div>
                         <div id="adjudicationAuditLog" style="margin-top:6px; font-family:var(--font-mono); font-size:10px; color:#059669; font-weight:700;">
                             ✓ Review Active • Compliance: 30s Multi-Spectral Gating Enforced
@@ -1520,6 +1520,9 @@ HTML_TEMPLATE = """
                         <div><strong>EXAMINING OPHTHALMOLOGIST SIGNATURE</strong></div>
                         <div style="font-size:10px; color:#4b5563;">Reg No: MED-IN-2026-90412</div>
                         <div style="font-size:9px; color:#6b7280; margin-top:2px;" id="rptSignedTimestamp">Pending 30s Adjudication...</div>
+                        <button id="btnSignOff" class="btn-sharp" style="margin-top:8px; font-size:10px; padding:4px 12px; background:#111827; color:#ffffff; border:1px solid #374151; cursor:pointer;" onclick="submitDoctorSignOff()" disabled>
+                            Authorize & Sign Report
+                        </button>
                     </div>
                 </div>
             </div>
@@ -1756,15 +1759,24 @@ HTML_TEMPLATE = """
             }
 
             const now = new Date();
-            document.getElementById('rptDate').innerText = (lastScreenData.timestamp || now.toISOString().replace('T', ' ').substring(0, 19)) + ' UTC';
-            document.getElementById('rptStudyId').innerText = 'OPT-' + now.getFullYear() + '-' + Math.floor(10000 + Math.random() * 90000);
-            document.getElementById('rptPatientId').innerText = 'PT-' + now.getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000);
+            const rawTs = lastScreenData.timestamp || (now.toISOString().replace('T', ' ').substring(0, 19) + ' UTC');
+            document.getElementById('rptDate').innerText = rawTs.endsWith('UTC') ? rawTs : rawTs + ' UTC';
+            document.getElementById('rptStudyId').innerText = lastScreenData.study_id || ('OPT-' + now.getFullYear() + '-' + Math.floor(10000 + Math.random() * 90000));
+            document.getElementById('rptPatientId').innerText = lastScreenData.patient_id || 'PT-2026-9042';
             document.getElementById('rptLaterality').innerText = lastScreenData.laterality || 'OD (Right Eye)';
             document.getElementById('rptSha256').innerText = lastScreenData.image_sha256 || '094813d4f5de2dfef2653c86488396bbe6a73c996a29a198282c71491ab111a6';
 
             document.getElementById('rptGradeName').innerText = lastScreenData.grade_name;
             document.getElementById('rptConf').innerText = (lastScreenData.confidence * 100).toFixed(1) + '%';
-            document.getElementById('rptCutoff').innerText = lastScreenData.referable ? "Grade ≥ 2 (Referable)" : "Grade < 2 (Non-Referable)";
+            
+            // Programmatic Triage Criteria Labeling (Never Non-Referable for Level 2+)
+            const cutoffText = lastScreenData.triage_criterion || (
+                lastScreenData.grade_level >= 4 ? "Grade 4 / NV-Positive (Urgent Referable)" :
+                lastScreenData.grade_level === 3 ? "Grade ≥ 3 (High-Risk Referable)" :
+                lastScreenData.grade_level === 2 ? "Grade ≥ 2 (Referable)" :
+                "Grade < 2 (Non-Referable)"
+            );
+            document.getElementById('rptCutoff').innerText = cutoffText;
 
             const badge = document.getElementById('rptBadge');
             if (lastScreenData.status === 'reject') {
@@ -1804,18 +1816,27 @@ HTML_TEMPLATE = """
 
             document.getElementById('rptRationale').innerText = lastScreenData.rationale;
 
-            // Reset Adjudication Checkboxes
-            document.getElementById('chkStage1').checked = false;
-            document.getElementById('chkStage2').checked = false;
-            document.getElementById('chkStage3').checked = false;
+            // Dynamically Drive Adjudication Checkboxes by Stage Verification State
+            document.getElementById('chkStage1').checked = (lastScreenData.status === 'pass');
+            document.getElementById('chkStage2').checked = (!lastScreenData.stats.is_outlier && (lastScreenData.stats.vessel_density || 0.08) > 0.02);
+            
+            // CRITICAL: Stage 4 must NEVER be pre-checked if XAI threshold failed
+            const stage4Passed = (!lastScreenData.is_xai_gated && iouVal >= 0.45 && pearsonVal >= 0.50);
+            document.getElementById('chkStage3').checked = stage4Passed;
+
             document.getElementById('rptSignedTimestamp').innerText = "Pending 30s Multi-Spectral Adjudication...";
             document.getElementById('rptSignedTimestamp').style.color = "#6b7280";
+            document.getElementById('btnSignOff').disabled = true;
 
             // Start 30-Second Review Stopwatch
             reviewStartTime = Date.now();
             if (reviewTimerInterval) clearInterval(reviewTimerInterval);
             reviewTimerInterval = setInterval(updateReviewTimer, 1000);
             updateReviewTimer();
+
+            // Log that doctor has opened the report sheet (viewing raw & enhanced)
+            logModuleView('orig');
+            logModuleView('enhanced');
 
             document.getElementById('doctorReportModal').style.display = 'flex';
         }
@@ -1835,6 +1856,7 @@ HTML_TEMPLATE = """
                 timerEl.innerText = `⏱️ REVIEW ACTIVE: ${mm}:${ss}s (Lock: ${remain}s remaining)`;
                 auditLog.style.color = "#d97706";
                 auditLog.innerText = `⏳ Active Inspection Required (${remain}s remaining before authorization can unlock)`;
+                document.getElementById('btnSignOff').disabled = true;
             } else {
                 timerEl.style.background = "#d1fae5";
                 timerEl.style.color = "#065f46";
@@ -1850,17 +1872,63 @@ HTML_TEMPLATE = """
             const c3 = document.getElementById('chkStage3').checked;
             const auditLog = document.getElementById('adjudicationAuditLog');
             const sigStamp = document.getElementById('rptSignedTimestamp');
+            const btn = document.getElementById('btnSignOff');
 
             if (elapsedSec >= 30 && c1 && c2 && c3) {
                 auditLog.style.color = "#059669";
-                auditLog.innerText = `✓ Physician Adjudication Complete (${elapsedSec}s elapsed inspection time logged)`;
-                sigStamp.innerText = `Authorized & Signed: ${new Date().toISOString().replace('T', ' ').substring(0, 19)} UTC (${elapsedSec}s review)`;
-                sigStamp.style.color = "#059669";
-                sigStamp.style.fontWeight = "700";
+                auditLog.innerText = `✓ Inspection Requirements Met (${elapsedSec}s elapsed). Ready for official signature.`;
+                btn.disabled = false;
             } else if (elapsedSec >= 30) {
                 auditLog.style.color = "#2563eb";
-                auditLog.innerText = `✓ 30s Time Met • Please check all 3 verification boxes to confirm multi-spectral inspection`;
+                auditLog.innerText = `✓ 30s Time Met • Confirm all 3 verification boxes to enable signature`;
+                btn.disabled = true;
             }
+        }
+
+        function submitDoctorSignOff() {
+            if (!lastScreenData || !lastScreenData.study_id) return;
+            const btn = document.getElementById('btnSignOff');
+            btn.disabled = true;
+            btn.innerText = "Authorizing on Server...";
+
+            const formData = new FormData();
+            formData.append('study_id', lastScreenData.study_id);
+            formData.append('doctor_name', 'Dr. Rajesh Sharma, MD');
+            formData.append('reg_no', 'MED-IN-2026-90412');
+
+            fetch('/api/approve_case', {
+                method: 'POST',
+                body: formData
+            })
+            .then(async res => {
+                const d = await res.json();
+                if (!res.ok) throw new Error(d.error || "Authorization failed");
+                return d;
+            })
+            .then(data => {
+                const auditLog = document.getElementById('adjudicationAuditLog');
+                const sigStamp = document.getElementById('rptSignedTimestamp');
+                auditLog.style.color = "#059669";
+                auditLog.innerText = `✓ Physician Adjudication Authorized (${data.elapsed_seconds}s inspection verified)`;
+                sigStamp.innerText = `Authorized & Signed: ${data.signed_timestamp} (${data.elapsed_seconds}s review)`;
+                sigStamp.style.color = "#059669";
+                sigStamp.style.fontWeight = "700";
+                btn.innerText = "✓ Authorized & Sealed";
+                showToast("✓ Clinical Diagnosis Officially Authorized & Locked");
+            })
+            .catch(err => {
+                alert(err.message);
+                btn.disabled = false;
+                btn.innerText = "Authorize & Sign Report";
+            });
+        }
+
+        function logModuleView(modName) {
+            if (!lastScreenData || !lastScreenData.study_id) return;
+            const formData = new FormData();
+            formData.append('study_id', lastScreenData.study_id);
+            formData.append('module_name', modName);
+            fetch('/api/log_view', { method: 'POST', body: formData }).catch(()=>{});
         }
 
         function closeDoctorReport(e) {
@@ -1880,6 +1948,7 @@ HTML_TEMPLATE = """
             else if (type === 'gradcam') overlay.src = "data:image/jpeg;base64," + lastScreenData.img_gradcam;
             else overlay.src = "data:image/jpeg;base64," + lastScreenData.img_enhanced;
 
+            logModuleView(type);
             showToast("Comparison Mode: Raw vs " + label);
         }
 
@@ -1959,12 +2028,14 @@ HTML_TEMPLATE = """
 def index():
     return render_template_string(HTML_TEMPLATE)
 
-# Global Study Audit Registry for Image Hash Tracking & Duplicate Prevention
+# Global Study Audit Registry & Session Storage
 STUDY_REGISTRY = {}
+INFERENCE_SESSIONS = {}
 
 @app.route('/api/screen', methods=['POST'])
 def api_screen():
     try:
+        import time, random, hashlib, datetime
         file = request.files.get('file')
         sample_name = request.form.get('sample_name')
         patient_id = request.form.get('patient_id', 'PT-2026-9042')
@@ -1988,18 +2059,21 @@ def api_screen():
         # 1. Module 1: Quality Gatekeeper, Authenticity Filter & Enhancement
         status, enhanced, q_report, reason = assess_and_enhance(img_path)
 
-        # Audit Registry: Check for cross-study duplicate reuse
+        # Audit Registry & Provenance Tracking
         img_sha = q_report.get('image_sha256', '')
+        study_id = f"OPT-2026-{random.randint(10000, 99999)}"
+        run_id = f"RUN-{hashlib.sha256((img_sha + str(time.time())).encode()).hexdigest()[:10].upper()}"
         is_duplicate = False
         duplicate_note = ""
-        import datetime
-        timestamp_now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
+        timestamp_now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+        
         if img_sha in STUDY_REGISTRY:
             is_duplicate = True
             first_entry = STUDY_REGISTRY[img_sha]
             duplicate_note = f"Warning: Identical image fingerprint previously screened under Patient {first_entry.get('patient_id')} at {first_entry.get('timestamp')}."
         else:
             STUDY_REGISTRY[img_sha] = {
+                'study_id': study_id,
                 'patient_id': patient_id,
                 'device_id': device_id,
                 'timestamp': timestamp_now
@@ -2027,13 +2101,36 @@ def api_screen():
             if is_duplicate:
                 rationale += f"\n\n⚠️ [AUDIT FLAG]: {duplicate_note}"
 
-        # Sanitize all data structures for clean JSON serialization
+        # Initialize Server-Side Review Session for Governance Locking
+        INFERENCE_SESSIONS[study_id] = {
+            'study_id': study_id,
+            'patient_id': patient_id,
+            'device_id': device_id,
+            'image_sha256': img_sha,
+            'run_id': run_id,
+            'start_time': time.time(),
+            'grade_level': level if status != 'reject' else -1,
+            'referable': ref,
+            'is_xai_gated': report.get('is_xai_gated', False) if status != 'reject' else False,
+            'modules_viewed': set(['orig']),
+            'approved': False
+        }
+
+        # Sanitize all data structures for clean single-source-of-truth JSON serialization
         response_data = sanitize_for_json({
+            'study_id': study_id,
+            'patient_id': patient_id,
+            'run_id': run_id,
             'status': status,
             'grade_level': level if status != 'reject' else -1,
             'grade_name': grade_name,
             'referable': ref,
             'confidence': conf,
+            'raw_confidence': report.get('raw_confidence', conf),
+            'downgrade_penalty_formula': report.get('downgrade_penalty_formula', 'N/A'),
+            'downgrade_rule_version': report.get('downgrade_rule_version', 'XAI-GATE-v2.4'),
+            'triage_decision': report.get('triage_decision', 'Routine Checkup'),
+            'triage_criterion': report.get('triage_criterion', 'Grade < 2 (Non-Referable)'),
             'quality': q_report,
             'stats': stats,
             'correlation_score': corr_score if status != 'reject' else 0.0,
@@ -2058,6 +2155,48 @@ def api_screen():
         import traceback
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
+
+@app.route('/api/log_view', methods=['POST'])
+def api_log_view():
+    study_id = request.form.get('study_id')
+    module_name = request.form.get('module_name')
+    if study_id in INFERENCE_SESSIONS and module_name:
+        INFERENCE_SESSIONS[study_id]['modules_viewed'].add(module_name)
+        return jsonify({'success': True, 'viewed': list(INFERENCE_SESSIONS[study_id]['modules_viewed'])})
+    return jsonify({'success': False}), 400
+
+@app.route('/api/approve_case', methods=['POST'])
+def api_approve_case():
+    import time, datetime
+    study_id = request.form.get('study_id')
+    doctor_name = request.form.get('doctor_name', 'Dr. Rajesh Sharma, MD')
+    reg_no = request.form.get('reg_no', 'MED-IN-2026-90412')
+
+    if not study_id or study_id not in INFERENCE_SESSIONS:
+        return jsonify({'error': 'Invalid or expired Study ID session'}), 400
+
+    session = INFERENCE_SESSIONS[study_id]
+    elapsed = time.time() - session['start_time']
+    min_required_seconds = 30
+
+    if elapsed < min_required_seconds and session.get('referable', False):
+        remaining = int(min_required_seconds - elapsed)
+        return jsonify({'error': f'Clinical Governance Lock: Minimum mandatory review interval is 30s ({remaining}s remaining). Please complete full multi-spectral review before sign-off.'}), 403
+
+    session['approved'] = True
+    session['approved_by'] = doctor_name
+    session['doctor_reg_no'] = reg_no
+    now_utc = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    session['approved_timestamp'] = now_utc
+
+    return jsonify({
+        'success': True,
+        'study_id': study_id,
+        'doctor_name': doctor_name,
+        'reg_no': reg_no,
+        'signed_timestamp': now_utc,
+        'elapsed_seconds': int(elapsed)
+    })
 
 @app.route('/api/telemedicine-sim', methods=['GET'])
 def api_telemedicine_sim():

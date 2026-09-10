@@ -146,6 +146,10 @@ def segment_retinal_structures(enhanced_bgr):
                 break
     nv_flag = bool(has_loop)
 
+    # Outlier Guard (Flags physiologically implausible or extreme artifact lesion counts)
+    is_outlier = bool(ma_count > 150 or ex_count > 100 or hem_count > 50)
+    outlier_warning = f"Predicted lesion counts ({ma_count} MAs, {ex_count} Exudates, {hem_count} Hemorrhages) exceed 99.5th percentile clinical training distribution. Flagged for mandatory manual review." if is_outlier else ""
+
     lesion_stats = {
         'od_center': (int(od_x), int(od_y)),
         'fovea_center': (int(fovea_x), int(fovea_y)),
@@ -157,7 +161,9 @@ def segment_retinal_structures(enhanced_bgr):
         'hem_count': int(hem_count),
         'hem_area': float(np.sum(hem_mask > 0)),
         'nv_flag': bool(nv_flag),
-        'nv_area': float(np.sum(od_dark_structures)) if nv_flag else 0.0
+        'nv_area': float(np.sum(od_dark_structures)) if nv_flag else 0.0,
+        'is_outlier': is_outlier,
+        'outlier_warning': outlier_warning
     }
 
     # Build High-Definition RGB Overlay Image
