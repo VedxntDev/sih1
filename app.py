@@ -516,20 +516,20 @@ HTML_TEMPLATE = """
         .preset-list-flat {
             display: flex;
             flex-direction: column;
-            gap: 4px;
-            margin-top: 14px;
+            gap: 6px;
+            margin-top: 6px;
         }
 
         .preset-item-flat {
-            padding: 10px 12px;
+            padding: 8px 12px;
             border: 1px solid var(--border-color);
             background: var(--bg-surface);
             display: flex;
             align-items: center;
             justify-content: space-between;
             cursor: pointer;
-            font-size: 13px;
-            font-weight: 500;
+            border-left: 3px solid transparent;
+            transition: background 0.15s ease, border-color 0.15s ease;
         }
 
         .preset-item-flat:hover {
@@ -537,14 +537,57 @@ HTML_TEMPLATE = """
             border-color: var(--accent-gold);
         }
 
+        .preset-item-flat.active {
+            background: var(--bg-surface-elevated);
+            border-color: var(--text-primary);
+            box-shadow: inset 0 0 0 1px var(--text-primary);
+        }
+
+        .preset-g0 { border-left-color: var(--accent-emerald); }
+        .preset-g1 { border-left-color: #38bdf8; }
+        .preset-g2 { border-left-color: var(--accent-gold); }
+        .preset-g3 { border-left-color: #fb923c; }
+        .preset-g4 { border-left-color: var(--accent-rose); }
+        .preset-qc { border-left-color: #94a3b8; }
+
+        .preset-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            text-align: left;
+        }
+
+        .preset-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: -0.01em;
+        }
+
+        .preset-sub {
+            font-size: 10px;
+            color: var(--text-muted);
+            font-family: var(--font-body);
+        }
+
         .preset-tag-flat {
             font-family: var(--font-mono);
-            font-size: 10px;
-            font-weight: 600;
-            padding: 2px 6px;
+            font-size: 9.5px;
+            font-weight: 700;
+            padding: 3px 7px;
             border: 1px solid var(--border-color);
             text-transform: uppercase;
+            letter-spacing: 0.04em;
+            white-space: nowrap;
         }
+
+        .tag-g0 { color: #10b981; background: rgba(16, 185, 129, 0.10); border-color: rgba(16, 185, 129, 0.35); }
+        .tag-g1 { color: #38bdf8; background: rgba(56, 189, 248, 0.10); border-color: rgba(56, 189, 248, 0.35); }
+        .tag-g2 { color: #f59e0b; background: rgba(245, 158, 11, 0.10); border-color: rgba(245, 158, 11, 0.35); }
+        .tag-g3 { color: #fb923c; background: rgba(251, 146, 60, 0.10); border-color: rgba(251, 146, 60, 0.35); }
+        .tag-g4 { color: #f43f5e; background: rgba(244, 63, 94, 0.12); border-color: rgba(244, 63, 94, 0.40); }
+        .tag-clahe { color: var(--accent-gold); background: rgba(245, 158, 11, 0.10); border-color: rgba(245, 158, 11, 0.30); }
+        .tag-drop { color: #f43f5e; background: rgba(244, 63, 94, 0.10); border-color: rgba(244, 63, 94, 0.35); }
 
         .quad-grid-flat {
             display: grid;
@@ -1015,34 +1058,82 @@ HTML_TEMPLATE = """
                         Execute AI Pipeline
                     </button>
 
+                    <!-- ICDR 5-Tier Disease Severity Grading -->
                     <div style="margin-top:24px;">
-                        <div style="font-family:var(--font-mono); font-size:10px; font-weight:700; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px;">
-                            Clinical Benchmark Presets:
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <span style="font-family:var(--font-mono); font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:var(--text-muted);">
+                                ICDR Clinical Progression (0–4):
+                            </span>
+                            <span style="font-family:var(--font-mono); font-size:9px; color:var(--accent-emerald); font-weight:600;">5-TIER</span>
                         </div>
                         <div class="preset-list-flat">
-                            <div class="preset-item-flat" onclick="selectSample('sample_01_clear.png')">
-                                <span>Grade 0: Normal Retina</span>
-                                <span class="preset-tag-flat" style="color:var(--accent-emerald);">Normal</span>
+                            <div class="preset-item-flat preset-g0" id="preset-sample_01_clear.png" onclick="selectSample('sample_01_clear.png')">
+                                <div class="preset-info">
+                                    <div class="preset-title">Grade 0: Normal Retina</div>
+                                    <div class="preset-sub">Clear vascular tree • No lesions</div>
+                                </div>
+                                <span class="preset-tag-flat tag-g0">Routine</span>
                             </div>
-                            <div class="preset-item-flat" onclick="selectSample('sample_02_low_contrast.png')">
-                                <span>Low Contrast Scan</span>
-                                <span class="preset-tag-flat" style="color:var(--accent-gold);">CLAHE</span>
+                            <div class="preset-item-flat preset-g1" id="preset-sample_01b_mild_dr.png" onclick="selectSample('sample_01b_mild_dr.png')">
+                                <div class="preset-info">
+                                    <div class="preset-title">Grade 1: Mild NPDR</div>
+                                    <div class="preset-sub">Microaneurysms only (isolated MAs)</div>
+                                </div>
+                                <span class="preset-tag-flat tag-g1">Monitor 12M</span>
                             </div>
-                            <div class="preset-item-flat" onclick="selectSample('sample_03_blurry.png')">
-                                <span>Blurry Scan</span>
-                                <span class="preset-tag-flat" style="color:var(--accent-rose);">Drop &lt;τ</span>
+                            <div class="preset-item-flat preset-g2" id="preset-sample_06_moderate_dr.png" onclick="selectSample('sample_06_moderate_dr.png')">
+                                <div class="preset-info">
+                                    <div class="preset-title">Grade 2: Moderate DR</div>
+                                    <div class="preset-sub">Hard Exudates + Multiple MAs</div>
+                                </div>
+                                <span class="preset-tag-flat tag-g2">Referable</span>
                             </div>
-                            <div class="preset-item-flat" onclick="selectSample('sample_06_moderate_dr.png')">
-                                <span>Grade 2: Moderate DR</span>
-                                <span class="preset-tag-flat" style="color:var(--accent-gold);">Referable</span>
+                            <div class="preset-item-flat preset-g3" id="preset-sample_07_severe_dr.png" onclick="selectSample('sample_07_severe_dr.png')">
+                                <div class="preset-info">
+                                    <div class="preset-title">Grade 3: Severe DR</div>
+                                    <div class="preset-sub">Multi-quadrant Blot Hemorrhages</div>
+                                </div>
+                                <span class="preset-tag-flat tag-g3">High Risk</span>
                             </div>
-                            <div class="preset-item-flat" onclick="selectSample('sample_07_severe_dr.png')">
-                                <span>Grade 3: Severe DR</span>
-                                <span class="preset-tag-flat" style="color:var(--accent-rose);">Hemorrhage</span>
+                            <div class="preset-item-flat preset-g4" id="preset-sample_08_proliferative_dr.png" onclick="selectSample('sample_08_proliferative_dr.png')">
+                                <div class="preset-info">
+                                    <div class="preset-title">Grade 4: Proliferative</div>
+                                    <div class="preset-sub">Optic Disc Neovascularization (NVD)</div>
+                                </div>
+                                <span class="preset-tag-flat tag-g4">Urgent NV</span>
                             </div>
-                            <div class="preset-item-flat" onclick="selectSample('sample_08_proliferative_dr.png')">
-                                <span>Grade 4: Proliferative</span>
-                                <span class="preset-tag-flat" style="color:var(--accent-rose);">Urgent NV</span>
+                        </div>
+                    </div>
+
+                    <!-- Edge DSP Quality Gatekeeper Tests -->
+                    <div style="margin-top:20px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <span style="font-family:var(--font-mono); font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:var(--text-muted);">
+                                Edge DSP Quality Gatekeeper:
+                            </span>
+                            <span style="font-family:var(--font-mono); font-size:9px; color:var(--accent-gold); font-weight:600;">&lt;40MS PRE-SCREEN</span>
+                        </div>
+                        <div class="preset-list-flat">
+                            <div class="preset-item-flat preset-qc" id="preset-sample_02_low_contrast.png" onclick="selectSample('sample_02_low_contrast.png')">
+                                <div class="preset-info">
+                                    <div class="preset-title">Low Contrast Scan</div>
+                                    <div class="preset-sub">Uneven illumination • Needs CLAHE</div>
+                                </div>
+                                <span class="preset-tag-flat tag-clahe">CLAHE</span>
+                            </div>
+                            <div class="preset-item-flat preset-qc" id="preset-sample_03_blurry.png" onclick="selectSample('sample_03_blurry.png')">
+                                <div class="preset-info">
+                                    <div class="preset-title">Blurry Scan</div>
+                                    <div class="preset-sub">Laplacian Var(∇²I) &lt; τ • Focus Drop</div>
+                                </div>
+                                <span class="preset-tag-flat tag-drop">Drop &lt; τ</span>
+                            </div>
+                            <div class="preset-item-flat preset-qc" id="preset-sample_05_cropped.png" onclick="selectSample('sample_05_cropped.png')">
+                                <div class="preset-info">
+                                    <div class="preset-title">Incomplete FOV</div>
+                                    <div class="preset-sub">Aperture clipping / boundary error</div>
+                                </div>
+                                <span class="preset-tag-flat tag-drop">FOV Drop</span>
                             </div>
                         </div>
                     </div>
@@ -1563,6 +1654,7 @@ HTML_TEMPLATE = """
             if (files && files.length > 0) {
                 selectedFile = files[0];
                 selectedSampleName = null;
+                document.querySelectorAll('.preset-item-flat').forEach(el => el.classList.remove('active'));
                 document.getElementById('fileSelectionText').innerText = "[ SELECTED: " + selectedFile.name + " ]";
                 document.getElementById('btnRun').disabled = false;
             }
@@ -1571,6 +1663,9 @@ HTML_TEMPLATE = """
         function selectSample(sampleName) {
             selectedSampleName = sampleName;
             selectedFile = null;
+            document.querySelectorAll('.preset-item-flat').forEach(el => el.classList.remove('active'));
+            const target = document.getElementById('preset-' + sampleName);
+            if (target) target.classList.add('active');
             document.getElementById('fileSelectionText').innerText = "[ PRESET: " + sampleName + " ]";
             document.getElementById('btnRun').disabled = false;
             

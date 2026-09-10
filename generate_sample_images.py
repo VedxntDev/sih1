@@ -78,6 +78,13 @@ def generate_dataset_samples(output_dir="data/sample_images"):
     img1, fov1, v1, od1, f1 = create_fundus_base(width=512, height=512)
     cv2.imwrite(os.path.join(output_dir, "sample_01_clear.png"), img1)
     
+    # Sample 1b: Mild NPDR (Grade 1 - Non-Referable, 2 Microaneurysms only)
+    img1b, _, _, _, _ = create_fundus_base(width=512, height=512)
+    ma_coords_mild = [(340, 170), (380, 270)]
+    for pt in ma_coords_mild:
+        cv2.circle(img1b, pt, 3, (10, 10, 190), -1)
+    cv2.imwrite(os.path.join(output_dir, "sample_01b_mild_dr.png"), img1b)
+
     # Sample 2: Low Contrast Fundus (Grade 0 Normal, Needs CLAHE Enhancement)
     img2, _, _, _, _ = create_fundus_base(width=512, height=512)
     h, w, _ = img2.shape
@@ -133,7 +140,7 @@ def generate_dataset_samples(output_dir="data/sample_images"):
         cv2.circle(img8, pt, 3, (10, 10, 190), -1)
     cv2.imwrite(os.path.join(output_dir, "sample_08_proliferative_dr.png"), img8)
 
-    print(f"Successfully generated 8 verified ground-truth sample images in '{output_dir}/'")
+    print(f"Successfully generated 9 verified ground-truth sample images in '{output_dir}/'")
 
 if __name__ == "__main__":
     generate_dataset_samples()

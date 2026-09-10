@@ -99,7 +99,7 @@ def explain_prediction(img, severity_level, referable_flag, confidence, lesion_s
     report = {
         'severity_level': severity_level,
         'severity_name': level_names[severity_level],
-        'referable_flag': referable_flag and not is_xai_gated,
+        'referable_flag': referable_flag,
         'confidence': calibrated_confidence,
         'spatial_iou': spatial_iou,
         'pearson_corr': p_corr,
